@@ -14,7 +14,8 @@ import {
   CheckCircle,
   XCircle,
   Truck,
-  Recycle
+  Recycle,
+  User
 } from 'lucide-react';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -149,18 +150,18 @@ const CollectorActivePickups = () => {
       // Update local state
       setPickups(prev => prev.map(pickup => 
         pickup.id === pickupId 
-          ? { ...pickup, status: 'completed' } 
+          ? { ...pickup, status: 'in-progress' } 
           : pickup
-      ).filter(pickup => pickup.status !== 'completed'));
+      ));
       
       toast({
-        title: 'Pickup Completed',
-        description: 'Pickup has been marked as completed.',
+        title: 'Status Updated',
+        description: 'Pickup status has been updated.',
       });
     } catch (error: any) {
       toast({
         title: 'Error',
-        description: error.message || 'Failed to complete pickup. Please try again.',
+        description: error.message || 'Failed to update pickup. Please try again.',
         variant: 'destructive',
       });
     }
@@ -362,7 +363,7 @@ const CollectorActivePickups = () => {
             <CardContent>
               <div className="w-full h-96 rounded-lg overflow-hidden">
                 <MapContainer 
-                  style={{ height: '500px' }}
+                  style={{ height: '100%' }}
                   className="rounded-lg"
                 >
                   <TileLayer

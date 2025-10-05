@@ -348,7 +348,7 @@ const CollectorPickupDetails = () => {
             <CardContent>
               <div className="w-full h-96 rounded-lg overflow-hidden">
                 <MapContainer 
-                  style={{ height: '500px' }}
+                  style={{ height: '100%' }}
                 >
                   <TileLayer
                     url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
