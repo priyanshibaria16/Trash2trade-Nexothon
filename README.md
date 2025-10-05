@@ -1,10 +1,22 @@
-# Trash2Trade - A Tech-Powered Recycling Ecosystem
+# EcoConnect - A Tech-Powered Recycling Ecosystem
 
 ## About the Project
 
-Trash2Trade is a comprehensive recycling platform that connects citizens, waste collectors, and NGOs in a sustainable ecosystem. The platform enables citizens to book waste pickups, collectors to manage their routes and earnings, and NGOs to sponsor recycling drives and track environmental impact.
+EcoConnect is a comprehensive recycling platform that connects citizens, waste collectors, and NGOs in a sustainable ecosystem. The platform enables citizens to book waste pickups, collectors to manage their routes and earnings, and NGOs to sponsor recycling drives and track environmental impact.
 
 Users can earn "Green Coins" for their recycling activities, which can be redeemed for rewards, creating a gamified experience that encourages sustainable behavior.
+
+## Recent Updates
+
+This project has been enhanced with:
+- Complete JWT authentication system
+- PostgreSQL database integration
+- Dynamic data fetching for all components
+- Leaflet maps integration (replacing Mapbox)
+- Forgot password functionality
+- Payment section implementation
+- All pages now properly connected to the database
+- Fixed errors in collector pickup and active pickup sections
 
 ## Project Structure
 
@@ -64,7 +76,7 @@ This project consists of two main components:
 
 ```sh
 # Navigate to the project root directory
-cd trash2trade
+cd eco-connect-trade
 
 # Install frontend dependencies
 npm install
@@ -73,7 +85,7 @@ npm install
 npm run dev
 ```
 
-The frontend will be available at http://localhost:8085
+The frontend will be available at http://localhost:8080
 
 ### Backend Setup
 
@@ -88,7 +100,7 @@ npm install
 # Copy .env.example to .env and update the values
 
 # Initialize the database
-npm run init-db
+npm run setup-db
 
 # Start the backend server
 npm run dev
