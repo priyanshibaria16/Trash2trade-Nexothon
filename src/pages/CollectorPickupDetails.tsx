@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -16,13 +16,19 @@ import {
   Truck,
   Recycle
 } from 'lucide-react';
-import mapboxgl from 'mapbox-gl';
-import 'mapbox-gl/dist/mapbox-gl.css';
+import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+import 'leaflet/dist/leaflet.css';
+import L from 'leaflet';
 import { apiGet, apiPost } from '@/utils/api.utils';
 import { useToast } from '@/hooks/use-toast';
 
-// Set Mapbox access token (you should use your own token in production)
-mapboxgl.accessToken = 'pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpejY4M29iazA2Z2gycXA4N2pmbDZmangifQ.-g_vE53SD2WrJ6tFX7QHmA';
+// Fix for default marker icons in Leaflet
+delete (L.Icon.Default.prototype as any)._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
+  iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
+  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+});
 
 interface PickupDetails {
   id: number;
@@ -44,9 +50,6 @@ const CollectorPickupDetails = () => {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
   const { toast } = useToast();
-  const mapContainer = useRef<HTMLDivElement>(null);
-  const map = useRef<mapboxgl.Map | null>(null);
-  const marker = useRef<mapboxgl.Marker | null>(null);
   const [pickup, setPickup] = useState<PickupDetails | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -57,18 +60,6 @@ const CollectorPickupDetails = () => {
   useEffect(() => {
     fetchPickupDetails();
   }, [id]);
-
-  useEffect(() => {
-    if (pickup && mapContainer.current) {
-      initializeMap();
-    }
-
-    return () => {
-      if (map.current) {
-        map.current.remove();
-      }
-    };
-  }, [pickup]);
 
   const fetchPickupDetails = async () => {
     setIsLoading(true);
@@ -104,47 +95,6 @@ const CollectorPickupDetails = () => {
     } finally {
       setIsLoading(false);
     }
-  };
-
-  const initializeMap = () => {
-    if (!pickup || !mapContainer.current) return;
-
-    // Remove existing map if it exists
-    if (map.current) {
-      map.current.remove();
-    }
-
-    // Create map
-    map.current = new mapboxgl.Map({
-      container: mapContainer.current,
-      style: 'mapbox://styles/mapbox/streets-v12',
-      center: pickup.coordinates,
-      zoom: 14,
-    });
-
-    // Add navigation controls
-    map.current.addControl(new mapboxgl.NavigationControl(), 'top-right');
-
-    // Add marker
-    if (marker.current) {
-      marker.current.remove();
-    }
-
-    marker.current = new mapboxgl.Marker({ color: '#10b981' })
-      .setLngLat(pickup.coordinates)
-      .addTo(map.current);
-
-    // Add popup to marker
-    const popup = new mapboxgl.Popup({ offset: 25 })
-      .setHTML(
-        `<div class="p-2">
-          <h3 class="font-bold">${pickup.citizenName}</h3>
-          <p class="text-sm">${pickup.address}</p>
-          <p class="text-sm">Waste: ${pickup.wasteType} (${pickup.quantity} items)</p>
-        </div>`
-      );
-
-    marker.current.setPopup(popup);
   };
 
   const handleStartPickup = async () => {
@@ -396,11 +346,24 @@ const CollectorPickupDetails = () => {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div 
-                ref={mapContainer} 
-                className="w-full h-96 rounded-lg overflow-hidden"
-                style={{ height: '500px' }}
-              />
+              <div className="w-full h-96 rounded-lg overflow-hidden">
+                <MapContainer 
+                  style={{ height: '500px' }}
+                >
+                  <TileLayer
+                    url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                  />
+                  <Marker position={[pickup.coordinates[1], pickup.coordinates[0]]}>
+                    <Popup>
+                      <div className="p-2">
+                        <h3 className="font-bold">{pickup.citizenName}</h3>
+                        <p className="text-sm">{pickup.address}</p>
+                        <p className="text-sm">Waste: {pickup.wasteType} ({pickup.quantity} items)</p>
+                      </div>
+                    </Popup>
+                  </Marker>
+                </MapContainer>
+              </div>
               <div className="mt-4 flex items-center text-sm text-muted-foreground">
                 <MapPin className="h-4 w-4 mr-2" />
                 <span>{pickup.address}</span>
