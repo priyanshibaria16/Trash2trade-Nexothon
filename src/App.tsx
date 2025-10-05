@@ -22,6 +22,8 @@ import CollectorPickupDetails from "./pages/CollectorPickupDetails";
 import CollectorActivePickups from "./pages/CollectorActivePickups";
 import CollectorEarnings from "./pages/CollectorEarnings";
 import NGODashboard from "./pages/NGODashboard";
+import NGOSponsorDrive from "./pages/NGOSponsorDrive";
+import NGOImpactTracker from "./pages/NGOImpactTracker";
 import Profile from "./pages/Profile";
 import NotFound from "./pages/NotFound";
 
@@ -55,8 +57,8 @@ const AppContent = () => {
           
           {/* NGO Routes */}
           <Route path="/ngo" element={<NGODashboard />} />
-          <Route path="/ngo/sponsor" element={<div>Sponsor Drive (Coming Soon)</div>} />
-          <Route path="/ngo/impact" element={<div>Impact Tracker (Coming Soon)</div>} />
+          <Route path="/ngo/sponsor" element={<NGOSponsorDrive />} />
+          <Route path="/ngo/impact" element={<NGOImpactTracker />} />
           
           {/* Profile */}
           <Route path="/profile" element={<Profile />} />

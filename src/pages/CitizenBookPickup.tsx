@@ -44,16 +44,14 @@ const CitizenBookPickup = () => {
     setIsLoading(true);
     
     try {
-      // Combine date and time for the preferred pickup time
-      const preferredTime = new Date(`${formData.preferredDate}T${formData.preferredTime}`).toISOString();
-      
-      // Prepare data for API call
+      // Prepare data for API call with correct field names
       const pickupData = {
-        wasteType: formData.wasteType,
-        quantity: formData.quantity,
+        waste_type: formData.wasteType,
+        quantity: parseInt(formData.quantity.toString()),
         address: formData.address,
         notes: formData.notes,
-        preferredTime,
+        preferred_date: formData.preferredDate,
+        preferred_time: formData.preferredTime,
       };
       
       // Make API call to book pickup
