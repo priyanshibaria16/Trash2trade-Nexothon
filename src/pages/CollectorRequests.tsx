@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -354,8 +354,10 @@ const CollectorRequests = () => {
                         Complete
                       </Button>
                     )}
-                    <Button variant="outline">
-                      Details
+                    <Button variant="outline" asChild>
+                      <Link to={`/collector/pickup/${request.id}`}>
+                        Details
+                      </Link>
                     </Button>
                   </div>
                 </div>

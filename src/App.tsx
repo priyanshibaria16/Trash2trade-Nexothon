@@ -18,6 +18,7 @@ import CitizenEcoScore from "./pages/CitizenEcoScore";
 import CitizenPickups from "./pages/CitizenPickups";
 import CollectorDashboard from "./pages/CollectorDashboard";
 import CollectorRequests from "./pages/CollectorRequests";
+import CollectorPickupDetails from "./pages/CollectorPickupDetails";
 import NGODashboard from "./pages/NGODashboard";
 import NotFound from "./pages/NotFound";
 
@@ -45,6 +46,7 @@ const AppContent = () => {
           {/* Collector Routes */}
           <Route path="/collector" element={<CollectorDashboard />} />
           <Route path="/collector/requests" element={<CollectorRequests />} />
+          <Route path="/collector/pickup/:id" element={<CollectorPickupDetails />} />
           <Route path="/collector/active" element={<div>Active Route (Coming Soon)</div>} />
           <Route path="/collector/earnings" element={<div>Earnings (Coming Soon)</div>} />
           
