@@ -304,7 +304,7 @@ const CollectorDashboard = () => {
                 <div className="text-center py-4">
                   <p className="text-muted-foreground text-sm">No active pickups</p>
                   <Button size="sm" className="mt-2" asChild>
-                    <Link to="/collector/requests">Find Pickups</Link>
+                    <Link to="/collector/active">View All Active Pickups</Link>
                   </Button>
                 </div>
               )}

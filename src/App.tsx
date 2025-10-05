@@ -19,7 +19,10 @@ import CitizenPickups from "./pages/CitizenPickups";
 import CollectorDashboard from "./pages/CollectorDashboard";
 import CollectorRequests from "./pages/CollectorRequests";
 import CollectorPickupDetails from "./pages/CollectorPickupDetails";
+import CollectorActivePickups from "./pages/CollectorActivePickups";
+import CollectorEarnings from "./pages/CollectorEarnings";
 import NGODashboard from "./pages/NGODashboard";
+import Profile from "./pages/Profile";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -47,8 +50,8 @@ const AppContent = () => {
           <Route path="/collector" element={<CollectorDashboard />} />
           <Route path="/collector/requests" element={<CollectorRequests />} />
           <Route path="/collector/pickup/:id" element={<CollectorPickupDetails />} />
-          <Route path="/collector/active" element={<div>Active Route (Coming Soon)</div>} />
-          <Route path="/collector/earnings" element={<div>Earnings (Coming Soon)</div>} />
+          <Route path="/collector/active" element={<CollectorActivePickups />} />
+          <Route path="/collector/earnings" element={<CollectorEarnings />} />
           
           {/* NGO Routes */}
           <Route path="/ngo" element={<NGODashboard />} />
@@ -56,7 +59,7 @@ const AppContent = () => {
           <Route path="/ngo/impact" element={<div>Impact Tracker (Coming Soon)</div>} />
           
           {/* Profile */}
-          <Route path="/profile" element={<div>Profile (Coming Soon)</div>} />
+          <Route path="/profile" element={<Profile />} />
           
           {/* Catch all */}
           <Route path="*" element={<NotFound />} />
