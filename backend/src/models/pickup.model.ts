@@ -45,12 +45,21 @@ export const createPickup = async (pickupData: PickupCreation): Promise<Pickup> 
 };
 
 /**
- * Get all pickups for a user
+ * Get all pickups for a user with user information
  * @param userId User ID
- * @returns Array of pickups
+ * @returns Array of pickups with user details
  */
-export const getPickupsByUserId = async (userId: number): Promise<Pickup[]> => {
-  const query = 'SELECT * FROM pickups WHERE user_id = $1 ORDER BY created_at DESC';
+export const getPickupsByUserId = async (userId: number): Promise<any[]> => {
+  const query = `
+    SELECT 
+      p.*, 
+      u.name as user_name,
+      u.email as user_email
+    FROM pickups p
+    JOIN users u ON p.user_id = u.id
+    WHERE p.user_id = $1 
+    ORDER BY p.created_at DESC
+  `;
   const values = [userId];
 
   const result = await pool.query(query, values);
@@ -58,12 +67,21 @@ export const getPickupsByUserId = async (userId: number): Promise<Pickup[]> => {
 };
 
 /**
- * Get all pickups for a collector
+ * Get all pickups for a collector with user information
  * @param collectorId Collector ID
- * @returns Array of pickups
+ * @returns Array of pickups with user details
  */
-export const getPickupsByCollectorId = async (collectorId: number): Promise<Pickup[]> => {
-  const query = 'SELECT * FROM pickups WHERE collector_id = $1 ORDER BY created_at DESC';
+export const getPickupsByCollectorId = async (collectorId: number): Promise<any[]> => {
+  const query = `
+    SELECT 
+      p.*, 
+      u.name as user_name,
+      u.email as user_email
+    FROM pickups p
+    JOIN users u ON p.user_id = u.id
+    WHERE p.collector_id = $1 
+    ORDER BY p.created_at DESC
+  `;
   const values = [collectorId];
 
   const result = await pool.query(query, values);
@@ -71,22 +89,39 @@ export const getPickupsByCollectorId = async (collectorId: number): Promise<Pick
 };
 
 /**
- * Get all pending pickups (for collectors to view)
- * @returns Array of pending pickups
+ * Get all pending pickups (for collectors to view) with user information
+ * @returns Array of pending pickups with user details
  */
-export const getPendingPickups = async (): Promise<Pickup[]> => {
-  const query = "SELECT * FROM pickups WHERE status = 'pending' ORDER BY created_at DESC";
+export const getPendingPickups = async (): Promise<any[]> => {
+  const query = `
+    SELECT 
+      p.*, 
+      u.name as user_name,
+      u.email as user_email
+    FROM pickups p
+    JOIN users u ON p.user_id = u.id
+    WHERE p.status = 'pending' 
+    ORDER BY p.created_at DESC
+  `;
   const result = await pool.query(query);
   return result.rows;
 };
 
 /**
- * Get pickup by ID
+ * Get pickup by ID with user information
  * @param id Pickup ID
- * @returns Pickup object or null if not found
+ * @returns Pickup object with user details or null if not found
  */
-export const getPickupById = async (id: number): Promise<Pickup | null> => {
-  const query = 'SELECT * FROM pickups WHERE id = $1';
+export const getPickupById = async (id: number): Promise<any | null> => {
+  const query = `
+    SELECT 
+      p.*, 
+      u.name as user_name,
+      u.email as user_email
+    FROM pickups p
+    JOIN users u ON p.user_id = u.id
+    WHERE p.id = $1
+  `;
   const values = [id];
 
   const result = await pool.query(query, values);

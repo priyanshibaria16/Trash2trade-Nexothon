@@ -16,6 +16,8 @@ export interface Pickup {
   longitude: number | null;
   created_at: Date;
   updated_at: Date;
+  user_name?: string;
+  user_email?: string;
 }
 
 export interface PickupCreation {
