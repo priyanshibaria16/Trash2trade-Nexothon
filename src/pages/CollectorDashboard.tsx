@@ -1,5 +1,5 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -20,6 +20,7 @@ import { mockPickups, mockCollectorStats } from '@/data/mockData';
 
 const CollectorDashboard = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   
   if (!user || user.role !== 'collector') {
     return <div>Access denied</div>;
@@ -27,11 +28,11 @@ const CollectorDashboard = () => {
 
   // Filter available pickup requests (not assigned to anyone or assigned to this collector)
   const availablePickups = mockPickups.filter(pickup => 
-    pickup.status === 'pending' || (pickup.collectorId === user.id && pickup.status !== 'completed')
+    pickup.status === 'pending' || (pickup.collectorId === user.id.toString() && pickup.status !== 'completed')
   );
   
   const myActivePickups = mockPickups.filter(pickup => 
-    pickup.collectorId === user.id && pickup.status === 'accepted'
+    pickup.collectorId === user.id.toString() && pickup.status === 'accepted'
   );
 
   const stats = [
@@ -173,7 +174,11 @@ const CollectorDashboard = () => {
             <CardContent>
               <div className="space-y-4">
                 {availablePickups.slice(0, 3).map((pickup) => (
-                  <div key={pickup.id} className="flex items-center space-x-4 p-3 border rounded-lg">
+                  <div 
+                    key={pickup.id} 
+                    className="flex items-center space-x-4 p-3 border rounded-lg hover:bg-muted/50 cursor-pointer transition-colors"
+                    onClick={() => navigate(`/collector/pickup/${pickup.id}`)}
+                  >
                     <div className="p-2 bg-primary/10 rounded-full">
                       <Truck className="h-4 w-4 text-primary" />
                     </div>
@@ -270,7 +275,11 @@ const CollectorDashboard = () => {
               {myActivePickups.length > 0 ? (
                 <div className="space-y-3">
                   {myActivePickups.map((pickup) => (
-                    <div key={pickup.id} className="p-3 border rounded-lg">
+                    <div 
+                      key={pickup.id} 
+                      className="p-3 border rounded-lg hover:bg-muted/50 cursor-pointer transition-colors"
+                      onClick={() => navigate(`/collector/pickup/${pickup.id}`)}
+                    >
                       <div className="flex items-center justify-between mb-2">
                         <span className="font-medium capitalize">{pickup.wasteType}</span>
                         <Badge variant="default">In Progress</Badge>
@@ -286,7 +295,7 @@ const CollectorDashboard = () => {
                         </div>
                       </div>
                       <Button size="sm" className="w-full mt-3" asChild>
-                        <Link to="/collector/active">Navigate</Link>
+                        <Link to={`/collector/pickup/${pickup.id}`}>View Details</Link>
                       </Button>
                     </div>
                   ))}
