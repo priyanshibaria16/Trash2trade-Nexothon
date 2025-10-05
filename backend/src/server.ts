@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import authRoutes from './routes/auth.routes';
+import pickupRoutes from './routes/pickup.routes';
 import pool from './config/db';
 
 // Load environment variables
@@ -16,6 +17,7 @@ app.use(express.json());
 
 // Routes
 app.use('/api/auth', authRoutes);
+app.use('/api/pickups', pickupRoutes);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {

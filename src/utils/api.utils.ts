@@ -16,7 +16,7 @@ export const authenticatedFetch = async (endpoint: string, options: RequestInit 
   };
   
   // Make the API call
-  const response = await fetch(`http://localhost:5001${endpoint}`, {
+  const response = await fetch(`http://localhost:5002${endpoint}`, {
     ...options,
     headers,
   });
