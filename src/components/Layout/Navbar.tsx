@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
@@ -25,11 +25,14 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { apiGet } from '@/utils/api.utils';
 
 const Navbar = () => {
   const { user, logout } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
+  const [notifications, setNotifications] = useState<any[]>([]);
+  const [unreadCount, setUnreadCount] = useState(0);
 
   const handleLogout = () => {
     logout();
@@ -64,6 +67,41 @@ const Navbar = () => {
       default:
         return [];
     }
+  };
+
+  // Fetch notifications (this is a simplified example)
+  useEffect(() => {
+    const fetchNotifications = async () => {
+      if (user) {
+        try {
+          // In a real app, this would fetch actual notifications from the API
+          // For now, we'll simulate some notifications
+          const simulatedNotifications = [
+            { id: 1, message: 'Your pickup has been accepted', read: false, timestamp: new Date() },
+            { id: 2, message: 'New reward available', read: false, timestamp: new Date(Date.now() - 86400000) },
+            { id: 3, message: 'Eco score updated', read: true, timestamp: new Date(Date.now() - 172800000) },
+          ];
+          setNotifications(simulatedNotifications);
+          setUnreadCount(simulatedNotifications.filter(n => !n.read).length);
+        } catch (error) {
+          console.error('Error fetching notifications:', error);
+        }
+      }
+    };
+
+    fetchNotifications();
+  }, [user]);
+
+  const markAsRead = (id: number) => {
+    setNotifications(notifications.map(n => 
+      n.id === id ? { ...n, read: true } : n
+    ));
+    setUnreadCount(unreadCount - 1);
+  };
+
+  const markAllAsRead = () => {
+    setNotifications(notifications.map(n => ({ ...n, read: true })));
+    setUnreadCount(0);
   };
 
   if (!user) {
@@ -132,9 +170,49 @@ const Navbar = () => {
             </div>
             
             {/* Notifications */}
-            <Button variant="ghost" size="sm">
-              <Bell className="h-4 w-4" />
-            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="sm" className="relative">
+                  <Bell className="h-4 w-4" />
+                  {unreadCount > 0 && (
+                    <span className="absolute top-0 right-0 inline-flex items-center justify-center px-1.5 py-0.5 text-xs font-bold leading-none text-white transform translate-x-1/2 -translate-y-1/2 bg-red-500 rounded-full">
+                      {unreadCount}
+                    </span>
+                  )}
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="w-80" align="end" forceMount>
+                <div className="flex items-center justify-between p-2">
+                  <h3 className="font-medium">Notifications</h3>
+                  {unreadCount > 0 && (
+                    <Button variant="ghost" size="sm" onClick={markAllAsRead}>
+                      Mark all as read
+                    </Button>
+                  )}
+                </div>
+                <DropdownMenuSeparator />
+                {notifications.length === 0 ? (
+                  <div className="p-4 text-center text-muted-foreground">
+                    No notifications
+                  </div>
+                ) : (
+                  <div className="max-h-64 overflow-y-auto">
+                    {notifications.map((notification) => (
+                      <DropdownMenuItem 
+                        key={notification.id} 
+                        className={`flex flex-col items-start p-3 ${!notification.read ? 'bg-accent' : ''}`}
+                        onClick={() => markAsRead(notification.id)}
+                      >
+                        <p className="text-sm">{notification.message}</p>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          {new Date(notification.timestamp).toLocaleDateString()}
+                        </p>
+                      </DropdownMenuItem>
+                    ))}
+                  </div>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
             
             {/* User Menu */}
             <DropdownMenu>

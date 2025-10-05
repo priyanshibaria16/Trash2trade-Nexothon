@@ -73,7 +73,7 @@ npm install
 npm run dev
 ```
 
-The frontend will be available at http://localhost:8080
+The frontend will be available at http://localhost:8085
 
 ### Backend Setup
 
@@ -94,7 +94,7 @@ npm run init-db
 npm run dev
 ```
 
-The backend API will be available at http://localhost:5000
+The backend API will be available at http://localhost:5004
 
 ## API Endpoints
 
@@ -103,9 +103,27 @@ The backend API will be available at http://localhost:5000
 - `POST /api/auth/login` - User login
 - `GET /api/auth/profile` - Get user profile (requires authentication)
 
+### Pickups
+- `POST /api/pickups` - Create pickup request
+- `GET /api/pickups/my` - Get user's pickups
+- `GET /api/pickups/collector` - Get collector's pickups
+- `GET /api/pickups/available` - Get available pickups
+- `GET /api/pickups/:id` - Get specific pickup
+- `PUT /api/pickups/:id/status` - Update pickup status
+
+### Rewards
+- `GET /api/rewards` - Get all active rewards
+- `POST /api/rewards/redeem` - Redeem a reward
+- `GET /api/rewards/my` - Get user's reward history
+
+### Payments
+- `POST /api/payments` - Create payment
+- `GET /api/payments` - Get user's payment history
+- `GET /api/payments/:id` - Get specific payment
+
 ## Database Schema
 
-The application uses a PostgreSQL database with the following main table:
+The application uses a PostgreSQL database with the following main tables:
 
 ### Users Table
 ```sql
@@ -117,6 +135,73 @@ CREATE TABLE users (
   role VARCHAR(20) NOT NULL CHECK (role IN ('citizen', 'collector', 'ngo')),
   green_coins INTEGER DEFAULT 0,
   eco_score INTEGER DEFAULT 0,
+  reset_token VARCHAR(255),
+  reset_token_expires TIMESTAMP,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+)
+```
+
+### Pickups Table
+```sql
+CREATE TABLE pickups (
+  id SERIAL PRIMARY KEY,
+  user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+  collector_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+  waste_type VARCHAR(20) NOT NULL CHECK (waste_type IN ('plastic', 'e-waste', 'paper', 'metal')),
+  quantity INTEGER NOT NULL,
+  address TEXT NOT NULL,
+  notes TEXT,
+  preferred_date DATE NOT NULL,
+  preferred_time TIME NOT NULL,
+  status VARCHAR(20) NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'accepted', 'in-progress', 'completed', 'cancelled')),
+  scheduled_date TIMESTAMP,
+  completed_date TIMESTAMP,
+  green_coins_earned INTEGER,
+  latitude DECIMAL(10, 8),
+  longitude DECIMAL(11, 8),
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+)
+```
+
+### Rewards Table
+```sql
+CREATE TABLE rewards (
+  id SERIAL PRIMARY KEY,
+  name VARCHAR(255) NOT NULL,
+  description TEXT,
+  green_coins_required INTEGER NOT NULL,
+  image_url TEXT,
+  is_active BOOLEAN DEFAULT true,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+)
+```
+
+### User Rewards Table
+```sql
+CREATE TABLE user_rewards (
+  id SERIAL PRIMARY KEY,
+  user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+  reward_id INTEGER REFERENCES rewards(id) ON DELETE CASCADE,
+  status VARCHAR(20) NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'redeemed', 'delivered')),
+  redeemed_at TIMESTAMP,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+)
+```
+
+### Payments Table
+```sql
+CREATE TABLE payments (
+  id SERIAL PRIMARY KEY,
+  user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+  amount DECIMAL(10, 2) NOT NULL,
+  currency VARCHAR(3) NOT NULL DEFAULT 'INR',
+  payment_method VARCHAR(50) NOT NULL,
+  status VARCHAR(20) NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'completed', 'failed', 'refunded')),
+  transaction_id VARCHAR(255),
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 )
