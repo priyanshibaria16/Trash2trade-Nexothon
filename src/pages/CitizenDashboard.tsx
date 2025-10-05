@@ -293,7 +293,7 @@ const CitizenDashboard = () => {
                       <span className="text-lg">🌱</span>
                       <span className="text-sm font-medium">First Pickup</span>
                     </div>
-                    {parseInt(stats.completedPickups) > 0 && (
+                    {stats.completedPickups > 0 && (
                       <div className="flex items-center space-x-2">
                         <span className="text-lg">♻️</span>
                         <span className="text-sm font-medium">Recycling Starter</span>

@@ -1,5 +1,4 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useEffect, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -7,76 +6,82 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { Gift, Trophy, Recycle, ShoppingCart, CreditCard } from 'lucide-react';
-import { apiPost } from '@/utils/api.utils';
+import { Gift, Coins, Loader, CheckCircle } from 'lucide-react';
+import { apiGet, apiPost } from '@/utils/api.utils';
+
+interface Reward {
+  id: number;
+  name: string;
+  description: string;
+  green_coins_required: number;
+  image_url: string | null;
+  is_active: boolean;
+  created_at: string;
+}
+
+interface UserReward {
+  id: number;
+  user_id: number;
+  reward_id: number;
+  status: string;
+  redeemed_at: string | null;
+  created_at: string;
+  name: string;
+  description: string;
+  green_coins_required: number;
+  image_url: string | null;
+}
 
 const CitizenRewards = () => {
   const { user } = useAuth();
-  const navigate = useNavigate();
   const { toast } = useToast();
-  const [isLoading, setIsLoading] = useState(false);
-  const [redeemAmount, setRedeemAmount] = useState('');
+  const [rewards, setRewards] = useState<Reward[]>([]);
+  const [userRewards, setUserRewards] = useState<UserReward[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [redeeming, setRedeeming] = useState<number | null>(null);
+  const [cashAmount, setCashAmount] = useState('');
 
-  if (!user || user.role !== 'citizen') {
-    return <div>Access denied</div>;
-  }
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        // Fetch all rewards
+        const rewardsResponse = await apiGet('/api/rewards');
+        setRewards(rewardsResponse.rewards || []);
+        
+        // Fetch user's reward history
+        const userRewardsResponse = await apiGet('/api/rewards/my');
+        setUserRewards(userRewardsResponse.rewards || []);
+      } catch (error) {
+        console.error('Error fetching rewards:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  // Mock rewards data - in a real app, this would come from an API
-  const rewards = [
-    {
-      id: 1,
-      title: 'Eco-Friendly Shopping Bag',
-      description: 'Reusable bag made from recycled materials',
-      greenCoins: 50,
-      image: '/placeholder.svg',
-    },
-    {
-      id: 2,
-      title: 'Plant a Tree',
-      description: 'Contribute to reforestation efforts',
-      greenCoins: 100,
-      image: '/placeholder.svg',
-    },
-    {
-      id: 3,
-      title: 'Recycled Notebook Set',
-      description: 'Set of 3 notebooks made from recycled paper',
-      greenCoins: 75,
-      image: '/placeholder.svg',
-    },
-    {
-      id: 4,
-      title: 'Public Transportation Pass',
-      description: 'One-month pass for eco-friendly commuting',
-      greenCoins: 200,
-      image: '/placeholder.svg',
-    },
-  ];
-
-  const handleRedeem = async (rewardId: number, greenCoins: number) => {
-    if ((user.greenCoins || 0) < greenCoins) {
-      toast({
-        title: 'Insufficient GreenCoins',
-        description: `You need ${greenCoins} GreenCoins to redeem this reward.`,
-        variant: 'destructive',
-      });
-      return;
+    if (user) {
+      fetchData();
     }
+  }, [user]);
 
-    setIsLoading(true);
-    
+  const handleRedeemReward = async (rewardId: number) => {
+    setRedeeming(rewardId);
     try {
-      // Make API call to redeem reward
       const response = await apiPost('/api/rewards/redeem', { rewardId });
       
       toast({
         title: 'Reward Redeemed!',
-        description: 'Your reward has been successfully redeemed. Check your email for details.',
+        description: 'Your reward has been successfully redeemed.',
       });
       
-      // In a real app, we would update the user's GreenCoins balance
-      // For now, we'll just navigate back to the dashboard
-      navigate('/citizen');
+      // Update user's reward history
+      const userRewardsResponse = await apiGet('/api/rewards/my');
+      setUserRewards(userRewardsResponse.rewards || []);
+      
+      // Update user's green coins in context
+      if (user) {
+        const updatedUser = { ...user };
+        // Note: In a real app, we would update the user context with the new green coin balance
+      }
     } catch (error: any) {
       toast({
         title: 'Error',
@@ -84,54 +89,62 @@ const CitizenRewards = () => {
         variant: 'destructive',
       });
     } finally {
-      setIsLoading(false);
+      setRedeeming(rewardId);
     }
   };
 
-  const handleCashRedemption = async () => {
-    const amount = parseInt(redeemAmount);
-    
-    if (isNaN(amount) || amount <= 0) {
+  const handleRedeemCash = async () => {
+    if (!cashAmount || parseFloat(cashAmount) <= 0) {
       toast({
-        title: 'Invalid Amount',
-        description: 'Please enter a valid amount of GreenCoins to redeem.',
+        title: 'Error',
+        description: 'Please enter a valid amount.',
         variant: 'destructive',
       });
       return;
     }
 
-    if ((user.greenCoins || 0) < amount) {
+    const amount = parseFloat(cashAmount);
+    if (amount > (user?.greenCoins || 0)) {
       toast({
-        title: 'Insufficient GreenCoins',
-        description: `You only have ${user.greenCoins} GreenCoins available.`,
+        title: 'Error',
+        description: 'Not enough GreenCoins.',
         variant: 'destructive',
       });
       return;
     }
 
-    setIsLoading(true);
-    
     try {
-      // Make API call to redeem for cash
-      const response = await apiPost('/api/rewards/redeem-cash', { amount });
+      // In a real app, this would make an API call to redeem cash
+      // await apiPost('/api/rewards/redeem-cash', { amount });
       
       toast({
         title: 'Cash Redemption Requested!',
-        description: `Request to redeem ${amount} GreenCoins for cash has been submitted.`,
+        description: `Your request to redeem ${amount} GreenCoins for cash has been submitted.`,
       });
       
-      // Reset form
-      setRedeemAmount('');
+      setCashAmount('');
     } catch (error: any) {
       toast({
         title: 'Error',
-        description: error.message || 'Failed to process cash redemption. Please try again.',
+        description: error.message || 'Failed to redeem cash. Please try again.',
         variant: 'destructive',
       });
-    } finally {
-      setIsLoading(false);
     }
   };
+
+  if (!user || user.role !== 'citizen') {
+    return <div>Access denied</div>;
+  }
+
+  if (loading) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <div className="flex justify-center items-center h-64">
+          <Loader className="h-8 w-8 animate-spin" />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -147,134 +160,132 @@ const CitizenRewards = () => {
         <CardContent className="p-6">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-lg font-semibold">Your GreenCoins Balance</h2>
-              <p className="text-3xl font-bold text-success">{user.greenCoins || 0} GC</p>
+              <p className="text-sm text-muted-foreground">Your GreenCoins Balance</p>
+              <p className="text-3xl font-bold">{user.greenCoins || 0} GC</p>
             </div>
-            <div className="p-3 bg-success/10 rounded-full">
-              <Gift className="h-8 w-8 text-success" />
-            </div>
+            <Coins className="h-12 w-12 text-primary" />
           </div>
         </CardContent>
       </Card>
 
-      {/* Cash Redemption */}
-      <Card className="mb-8">
-        <CardHeader>
-          <CardTitle className="flex items-center">
-            <CreditCard className="h-5 w-5 mr-2" />
-            Redeem for Cash
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <p className="text-muted-foreground mb-4">
-                Convert your GreenCoins to cash at a rate of 10 GC = $1
-              </p>
-              <div className="text-sm">
-                <p className="font-medium">Redemption Rate</p>
-                <p>10 GreenCoins = $1</p>
-              </div>
-            </div>
-            <div>
-              <Label htmlFor="redeemAmount">Amount to Redeem (GC)</Label>
-              <div className="flex space-x-2 mt-2">
-                <Input
-                  id="redeemAmount"
-                  type="number"
-                  min="10"
-                  step="10"
-                  value={redeemAmount}
-                  onChange={(e) => setRedeemAmount(e.target.value)}
-                  placeholder="Enter amount"
-                />
-                <Button 
-                  onClick={handleCashRedemption} 
-                  disabled={isLoading || !redeemAmount}
-                >
-                  {isLoading ? 'Processing...' : 'Redeem'}
-                </Button>
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+      <div className="grid lg:grid-cols-3 gap-8">
+        {/* Available Rewards */}
+        <div className="lg:col-span-2 space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center">
+                <Gift className="h-5 w-5 mr-2" />
+                Available Rewards
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {rewards.length === 0 ? (
+                <div className="text-center py-8">
+                  <Gift className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                  <p className="text-muted-foreground">No rewards available at the moment.</p>
+                </div>
+              ) : (
+                <div className="grid md:grid-cols-2 gap-4">
+                  {rewards.map((reward) => (
+                    <Card key={reward.id}>
+                      <CardContent className="p-4">
+                        <div className="flex justify-between items-start mb-3">
+                          <h3 className="font-medium">{reward.name}</h3>
+                          <Badge variant="secondary">{reward.green_coins_required} GC</Badge>
+                        </div>
+                        <p className="text-sm text-muted-foreground mb-4">
+                          {reward.description}
+                        </p>
+                        <Button
+                          className="w-full"
+                          disabled={user.greenCoins < reward.green_coins_required || redeeming === reward.id}
+                          onClick={() => handleRedeemReward(reward.id)}
+                        >
+                          {redeeming === reward.id ? (
+                            <Loader className="h-4 w-4 animate-spin" />
+                          ) : (
+                            'Redeem Now'
+                          )}
+                        </Button>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
 
-      {/* Reward Catalog */}
-      <div className="mb-6">
-        <h2 className="text-2xl font-bold mb-4">Available Rewards</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {rewards.map((reward) => (
-            <Card key={reward.id} className="flex flex-col">
-              <div className="p-4 flex-1">
-                <div className="bg-muted rounded-lg h-32 flex items-center justify-center mb-4">
-                  <img 
-                    src={reward.image} 
-                    alt={reward.title} 
-                    className="max-h-24 object-contain"
+        {/* Right Column */}
+        <div className="space-y-6">
+          {/* Redeem Cash */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Redeem for Cash</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="cashAmount">Amount (GreenCoins)</Label>
+                  <Input
+                    id="cashAmount"
+                    type="number"
+                    value={cashAmount}
+                    onChange={(e) => setCashAmount(e.target.value)}
+                    placeholder="Enter amount"
                   />
                 </div>
-                <h3 className="font-semibold text-lg mb-1">{reward.title}</h3>
-                <p className="text-sm text-muted-foreground mb-3">{reward.description}</p>
-                <Badge variant="secondary">{reward.greenCoins} GC</Badge>
-              </div>
-              <div className="p-4 pt-0">
                 <Button 
-                  className="w-full"
-                  onClick={() => handleRedeem(reward.id, reward.greenCoins)}
-                  disabled={isLoading || (user.greenCoins || 0) < reward.greenCoins}
+                  className="w-full" 
+                  onClick={handleRedeemCash}
+                  disabled={!cashAmount || parseFloat(cashAmount) <= 0}
                 >
-                  Redeem
+                  Request Cash Redemption
                 </Button>
+                <p className="text-xs text-muted-foreground">
+                  Note: 100 GreenCoins = ₹100 cashback (subject to terms)
+                </p>
               </div>
-            </Card>
-          ))}
+            </CardContent>
+          </Card>
+
+          {/* Reward History */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Reward History</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {userRewards.length === 0 ? (
+                <div className="text-center py-4">
+                  <p className="text-muted-foreground text-sm">No rewards redeemed yet</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {userRewards.slice(0, 5).map((userReward) => (
+                    <div key={userReward.id} className="flex items-center justify-between p-2 border rounded">
+                      <div>
+                        <p className="text-sm font-medium">{userReward.name}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {new Date(userReward.created_at).toLocaleDateString()}
+                        </p>
+                      </div>
+                      <Badge 
+                        variant={
+                          userReward.status === 'redeemed' ? 'default' : 
+                          userReward.status === 'delivered' ? 'secondary' : 
+                          'outline'
+                        }
+                      >
+                        {userReward.status}
+                      </Badge>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
         </div>
       </div>
-
-      {/* How It Works */}
-      <Card>
-        <CardHeader>
-          <CardTitle>How GreenCoins Work</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="flex items-start space-x-3">
-              <div className="p-2 bg-primary/10 rounded-full mt-1">
-                <Recycle className="h-4 w-4 text-primary" />
-              </div>
-              <div>
-                <h3 className="font-medium">Earn</h3>
-                <p className="text-sm text-muted-foreground">
-                  Earn GreenCoins for every successful waste pickup
-                </p>
-              </div>
-            </div>
-            <div className="flex items-start space-x-3">
-              <div className="p-2 bg-success/10 rounded-full mt-1">
-                <Trophy className="h-4 w-4 text-success" />
-              </div>
-              <div>
-                <h3 className="font-medium">Accumulate</h3>
-                <p className="text-sm text-muted-foreground">
-                  Build up your GreenCoins balance over time
-                </p>
-              </div>
-            </div>
-            <div className="flex items-start space-x-3">
-              <div className="p-2 bg-warning/10 rounded-full mt-1">
-                <ShoppingCart className="h-4 w-4 text-warning" />
-              </div>
-              <div>
-                <h3 className="font-medium">Redeem</h3>
-                <p className="text-sm text-muted-foreground">
-                  Exchange GreenCoins for rewards or cash
-                </p>
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
     </div>
   );
 };

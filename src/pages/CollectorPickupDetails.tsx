@@ -1,26 +1,24 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import React, { useEffect, useState } from 'react';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { 
+  Recycle, 
   MapPin, 
   Clock, 
-  User, 
-  Phone, 
-  MessageSquare, 
-  Navigation,
-  CheckCircle,
-  XCircle,
-  Truck,
-  Recycle
+  CheckCircle, 
+  XCircle, 
+  Loader, 
+  Calendar,
+  User,
+  ArrowLeft
 } from 'lucide-react';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import { apiGet, apiPost } from '@/utils/api.utils';
-import { useToast } from '@/hooks/use-toast';
 
 // Fix for default marker icons in Leaflet
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -30,172 +28,110 @@ L.Icon.Default.mergeOptions({
   shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
 });
 
-interface PickupDetails {
+interface Pickup {
   id: number;
-  citizenName: string;
-  citizenPhone: string;
-  citizenEmail: string;
-  wasteType: string;
+  user_id: number;
+  waste_type: string;
   quantity: number;
   address: string;
-  preferredTime: string;
-  status: 'pending' | 'accepted' | 'in-progress' | 'completed' | 'cancelled';
-  notes: string;
-  coordinates: [number, number];
-  greenCoins: number;
+  notes: string | null;
+  preferred_date: string;
+  preferred_time: string;
+  status: string;
+  collector_id: number | null;
+  scheduled_date: string | null;
+  completed_date: string | null;
+  green_coins_earned: number | null;
+  latitude: number | null;
+  longitude: number | null;
+  created_at: string;
+  user_name: string;
+  user_email: string;
 }
 
 const CollectorPickupDetails = () => {
+  const { id } = useParams<{ id: string }>();
   const { user } = useAuth();
   const navigate = useNavigate();
-  const { id } = useParams<{ id: string }>();
-  const { toast } = useToast();
-  const [pickup, setPickup] = useState<PickupDetails | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [pickup, setPickup] = useState<Pickup | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [actionLoading, setActionLoading] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchPickup = async () => {
+      try {
+        const response = await apiGet(`/api/pickups/${id}`);
+        setPickup(response.pickup);
+      } catch (error) {
+        console.error('Error fetching pickup:', error);
+        navigate('/collector/active-pickups');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (id && user) {
+      fetchPickup();
+    }
+  }, [id, user]);
+
+  const handleStartPickup = async () => {
+    if (!pickup) return;
+    
+    setActionLoading('start');
+    try {
+      await apiPost(`/api/pickups/${pickup.id}/status`, { status: 'in-progress' });
+      
+      // Update local state
+      setPickup({ ...pickup, status: 'in-progress' });
+    } catch (error: any) {
+      console.error('Error starting pickup:', error);
+    } finally {
+      setActionLoading('start');
+    }
+  };
+
+  const handleCompletePickup = async () => {
+    if (!pickup) return;
+    
+    setActionLoading('complete');
+    try {
+      await apiPost(`/api/pickups/${pickup.id}/status`, { status: 'completed' });
+      
+      // Update local state
+      setPickup({ ...pickup, status: 'completed' });
+    } catch (error: any) {
+      console.error('Error completing pickup:', error);
+    } finally {
+      setActionLoading('complete');
+    }
+  };
+
+  const handleCancelPickup = async () => {
+    if (!pickup) return;
+    
+    setActionLoading('cancel');
+    try {
+      await apiPost(`/api/pickups/${pickup.id}/status`, { status: 'cancelled' });
+      
+      // Update local state
+      setPickup({ ...pickup, status: 'cancelled' });
+    } catch (error: any) {
+      console.error('Error cancelling pickup:', error);
+    } finally {
+      setActionLoading('cancel');
+    }
+  };
 
   if (!user || user.role !== 'collector') {
     return <div>Access denied</div>;
   }
 
-  useEffect(() => {
-    fetchPickupDetails();
-  }, [id]);
-
-  const fetchPickupDetails = async () => {
-    setIsLoading(true);
-    try {
-      // In a real app, this would fetch from the backend
-      // const response = await apiGet(`/api/collector/pickups/${id}`);
-      // For now, we'll use mock data
-      
-      // Mock data - in a real app, this would come from the API
-      const mockPickup: PickupDetails = {
-        id: parseInt(id || '1'),
-        citizenName: 'John Doe',
-        citizenPhone: '+1 (555) 123-4567',
-        citizenEmail: 'john.doe@example.com',
-        wasteType: 'plastic',
-        quantity: 5,
-        address: '123 Green Street, EcoCity, EC 12345',
-        preferredTime: '2024-01-15T10:00:00Z',
-        status: 'accepted',
-        notes: 'Please ring the doorbell twice. The recycling is in the garage.',
-        coordinates: [-74.0060, 40.7128], // New York coordinates as example
-        greenCoins: 15,
-      };
-      
-      setPickup(mockPickup);
-    } catch (error: any) {
-      toast({
-        title: 'Error',
-        description: error.message || 'Failed to fetch pickup details. Please try again.',
-        variant: 'destructive',
-      });
-      navigate('/collector/requests');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleStartPickup = async () => {
-    try {
-      // In a real app, this would make an API call
-      // await apiPost(`/api/collector/pickups/${id}/start`, {});
-      
-      if (pickup) {
-        setPickup({ ...pickup, status: 'in-progress' });
-      }
-      
-      toast({
-        title: 'Pickup Started',
-        description: 'Pickup is now in progress.',
-      });
-    } catch (error: any) {
-      toast({
-        title: 'Error',
-        description: error.message || 'Failed to start pickup. Please try again.',
-        variant: 'destructive',
-      });
-    }
-  };
-
-  const handleCompletePickup = async () => {
-    try {
-      // In a real app, this would make an API call
-      // await apiPost(`/api/collector/pickups/${id}/complete`, {});
-      
-      if (pickup) {
-        setPickup({ ...pickup, status: 'completed' });
-      }
-      
-      toast({
-        title: 'Pickup Completed',
-        description: 'Pickup has been marked as completed.',
-      });
-    } catch (error: any) {
-      toast({
-        title: 'Error',
-        description: error.message || 'Failed to complete pickup. Please try again.',
-        variant: 'destructive',
-      });
-    }
-  };
-
-  const handleCancelPickup = async () => {
-    try {
-      // In a real app, this would make an API call
-      // await apiPost(`/api/collector/pickups/${id}/cancel`, {});
-      
-      if (pickup) {
-        setPickup({ ...pickup, status: 'cancelled' });
-      }
-      
-      toast({
-        title: 'Pickup Cancelled',
-        description: 'Pickup has been cancelled.',
-      });
-    } catch (error: any) {
-      toast({
-        title: 'Error',
-        description: error.message || 'Failed to cancel pickup. Please try again.',
-        variant: 'destructive',
-      });
-    }
-  };
-
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case 'pending':
-        return <Badge variant="secondary">Pending</Badge>;
-      case 'accepted':
-        return <Badge className="bg-blue-500">Accepted</Badge>;
-      case 'in-progress':
-        return <Badge className="bg-yellow-500">In Progress</Badge>;
-      case 'completed':
-        return <Badge className="bg-green-500">Completed</Badge>;
-      case 'cancelled':
-        return <Badge variant="destructive">Cancelled</Badge>;
-      default:
-        return <Badge variant="secondary">{status}</Badge>;
-    }
-  };
-
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    });
-  };
-
-  if (isLoading) {
+  if (loading) {
     return (
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="text-center py-12">
-          <div className="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary mb-4"></div>
-          <p>Loading pickup details...</p>
+      <div className="container mx-auto px-4 py-8">
+        <div className="flex justify-center items-center h-64">
+          <Loader className="h-8 w-8 animate-spin" />
         </div>
       </div>
     );
@@ -203,12 +139,9 @@ const CollectorPickupDetails = () => {
 
   if (!pickup) {
     return (
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="text-center py-12">
-          <p>Pickup not found.</p>
-          <Button onClick={() => navigate('/collector/requests')} className="mt-4">
-            Back to Requests
-          </Button>
+      <div className="container mx-auto px-4 py-8">
+        <div className="text-center">
+          <p className="text-muted-foreground">Pickup not found</p>
         </div>
       </div>
     );
@@ -217,157 +150,204 @@ const CollectorPickupDetails = () => {
   return (
     <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div className="mb-6">
-        <Button variant="ghost" onClick={() => navigate('/collector/requests')} className="mb-4">
-          ← Back to Requests
+        <Button variant="ghost" asChild>
+          <Link to="/collector/active-pickups">
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Back to Active Pickups
+          </Link>
         </Button>
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-          <div>
-            <h1 className="text-3xl font-bold text-foreground mb-2">Pickup Details</h1>
-            <p className="text-muted-foreground">
-              View and manage this pickup request
-            </p>
-          </div>
-          <div className="flex items-center gap-2">
-            {getStatusBadge(pickup.status)}
-            <Badge variant="secondary">{pickup.quantity} items</Badge>
-          </div>
-        </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Left Column - Details */}
-        <div className="lg:col-span-1 space-y-6">
-          {/* Citizen Information */}
+      <div className="grid lg:grid-cols-2 gap-8">
+        {/* Pickup Details */}
+        <div className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center">
-                <User className="h-5 w-5 mr-2" />
-                Citizen Information
-              </CardTitle>
+              <div className="flex justify-between items-start">
+                <div>
+                  <CardTitle className="flex items-center space-x-2">
+                    <Recycle className="h-5 w-5 text-primary" />
+                    <span className="capitalize">{pickup.waste_type} Pickup</span>
+                  </CardTitle>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    {pickup.quantity} items/bags
+                  </p>
+                </div>
+                <Badge 
+                  variant={
+                    pickup.status === 'completed' ? 'default' : 
+                    pickup.status === 'cancelled' ? 'destructive' : 
+                    pickup.status === 'in-progress' ? 'secondary' : 
+                    'outline'
+                  }
+                >
+                  {pickup.status}
+                </Badge>
+              </div>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div>
-                <p className="text-sm text-muted-foreground">Name</p>
-                <p className="font-medium">{pickup.citizenName}</p>
+            <CardContent>
+              <div className="space-y-4">
+                <div>
+                  <h3 className="text-sm font-medium mb-2">Citizen Details</h3>
+                  <div className="flex items-center text-sm p-3 border rounded-lg">
+                    <User className="h-4 w-4 mr-2 text-muted-foreground" />
+                    <div>
+                      <div className="font-medium">{pickup.user_name}</div>
+                      <div className="text-muted-foreground">{pickup.user_email}</div>
+                    </div>
+                  </div>
+                </div>
+                
+                <div>
+                  <h3 className="text-sm font-medium mb-2">Pickup Information</h3>
+                  <div className="space-y-3">
+                    <div className="flex items-center text-sm">
+                      <MapPin className="h-4 w-4 mr-2 text-muted-foreground" />
+                      <span>{pickup.address}</span>
+                    </div>
+                    
+                    <div className="flex items-center text-sm">
+                      <Calendar className="h-4 w-4 mr-2 text-muted-foreground" />
+                      <span>
+                        Preferred: {new Date(pickup.preferred_date).toLocaleDateString()} at {pickup.preferred_time}
+                      </span>
+                    </div>
+                    
+                    {pickup.scheduled_date && (
+                      <div className="flex items-center text-sm">
+                        <Clock className="h-4 w-4 mr-2 text-muted-foreground" />
+                        <span>
+                          Scheduled: {new Date(pickup.scheduled_date).toLocaleString()}
+                        </span>
+                      </div>
+                    )}
+                    
+                    {pickup.notes && (
+                      <div className="text-sm">
+                        <p className="font-medium mb-1">Notes:</p>
+                        <p className="text-muted-foreground">{pickup.notes}</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+                
+                {pickup.status === 'completed' && pickup.green_coins_earned && (
+                  <div className="p-3 bg-success/10 rounded-lg">
+                    <div className="flex items-center text-success">
+                      <CheckCircle className="h-4 w-4 mr-2" />
+                      <span>Earned {pickup.green_coins_earned} GreenCoins</span>
+                    </div>
+                  </div>
+                )}
               </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Phone</p>
-                <p className="font-medium">{pickup.citizenPhone}</p>
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Email</p>
-                <p className="font-medium">{pickup.citizenEmail}</p>
-              </div>
-              <Button variant="outline" className="w-full">
-                <MessageSquare className="h-4 w-4 mr-2" />
-                Contact Citizen
-              </Button>
             </CardContent>
           </Card>
-
-          {/* Pickup Information */}
+          
+          {/* Action Buttons */}
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center">
-                <Recycle className="h-5 w-5 mr-2" />
-                Pickup Information
-              </CardTitle>
+              <CardTitle>Actions</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div>
-                <p className="text-sm text-muted-foreground">Waste Type</p>
-                <p className="font-medium capitalize">{pickup.wasteType}</p>
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Quantity</p>
-                <p className="font-medium">{pickup.quantity} items</p>
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Preferred Time</p>
-                <p className="font-medium">{formatDate(pickup.preferredTime)}</p>
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Address</p>
-                <p className="font-medium">{pickup.address}</p>
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Notes</p>
-                <p className="font-medium">{pickup.notes || 'No additional notes'}</p>
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">GreenCoins</p>
-                <p className="font-medium text-success">+{pickup.greenCoins} GC</p>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Actions */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center">
-                <Truck className="h-5 w-5 mr-2" />
-                Actions
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {pickup.status === 'accepted' && (
-                <Button onClick={handleStartPickup} className="w-full">
-                  <Navigation className="h-4 w-4 mr-2" />
-                  Start Pickup
+            <CardContent>
+              <div className="space-y-3">
+                {pickup.status === 'accepted' && (
+                  <Button 
+                    className="w-full"
+                    onClick={handleStartPickup}
+                    disabled={actionLoading === 'start'}
+                  >
+                    {actionLoading === 'start' ? (
+                      <Loader className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <>
+                        <CheckCircle className="h-4 w-4 mr-2" />
+                        Start Pickup
+                      </>
+                    )}
+                  </Button>
+                )}
+                
+                {pickup.status === 'in-progress' && (
+                  <Button 
+                    className="w-full"
+                    onClick={handleCompletePickup}
+                    disabled={actionLoading === 'complete'}
+                  >
+                    {actionLoading === 'complete' ? (
+                      <Loader className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <>
+                        <CheckCircle className="h-4 w-4 mr-2" />
+                        Complete Pickup
+                      </>
+                    )}
+                  </Button>
+                )}
+                
+                {(pickup.status === 'accepted' || pickup.status === 'in-progress') && (
+                  <Button 
+                    variant="outline" 
+                    className="w-full"
+                    onClick={handleCancelPickup}
+                    disabled={actionLoading === 'cancel'}
+                  >
+                    {actionLoading === 'cancel' ? (
+                      <Loader className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <>
+                        <XCircle className="h-4 w-4 mr-2" />
+                        Cancel Pickup
+                      </>
+                    )}
+                  </Button>
+                )}
+                
+                <Button 
+                  variant="outline" 
+                  className="w-full"
+                  asChild
+                >
+                  <Link to="/collector/active-pickups">
+                    Back to Active Pickups
+                  </Link>
                 </Button>
-              )}
-              {pickup.status === 'in-progress' && (
-                <Button onClick={handleCompletePickup} className="w-full">
-                  <CheckCircle className="h-4 w-4 mr-2" />
-                  Mark as Completed
-                </Button>
-              )}
-              {(pickup.status === 'accepted' || pickup.status === 'in-progress') && (
-                <Button variant="outline" onClick={handleCancelPickup} className="w-full">
-                  <XCircle className="h-4 w-4 mr-2" />
-                  Cancel Pickup
-                </Button>
-              )}
-              <Button variant="outline" className="w-full">
-                <Navigation className="h-4 w-4 mr-2" />
-                Get Directions
-              </Button>
+              </div>
             </CardContent>
           </Card>
         </div>
 
-        {/* Right Column - Map */}
-        <div className="lg:col-span-2">
-          <Card>
+        {/* Map View */}
+        <div className="h-full">
+          <Card className="h-full">
             <CardHeader>
-              <CardTitle className="flex items-center">
-                <MapPin className="h-5 w-5 mr-2" />
-                Pickup Location
-              </CardTitle>
+              <CardTitle>Location</CardTitle>
             </CardHeader>
-            <CardContent>
-              <div className="w-full h-96 rounded-lg overflow-hidden">
+            <CardContent className="h-full p-0">
+              {pickup.latitude && pickup.longitude ? (
                 <MapContainer 
                   style={{ height: '100%' }}
                 >
                   <TileLayer
                     url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                    attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
                   />
-                  <Marker position={[pickup.coordinates[1], pickup.coordinates[0]]}>
+                  <Marker position={[pickup.latitude, pickup.longitude]}>
                     <Popup>
-                      <div className="p-2">
-                        <h3 className="font-bold">{pickup.citizenName}</h3>
-                        <p className="text-sm">{pickup.address}</p>
-                        <p className="text-sm">Waste: {pickup.wasteType} ({pickup.quantity} items)</p>
+                      <div className="text-sm">
+                        <div className="font-medium capitalize">{pickup.waste_type} Pickup</div>
+                        <div className="text-muted-foreground">{pickup.address}</div>
                       </div>
                     </Popup>
                   </Marker>
                 </MapContainer>
-              </div>
-              <div className="mt-4 flex items-center text-sm text-muted-foreground">
-                <MapPin className="h-4 w-4 mr-2" />
-                <span>{pickup.address}</span>
-              </div>
+              ) : (
+                <div className="flex items-center justify-center h-full">
+                  <div className="text-center">
+                    <MapPin className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                    <p className="text-muted-foreground">Location not available</p>
+                  </div>
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>
