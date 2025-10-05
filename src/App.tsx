@@ -12,7 +12,12 @@ import Landing from "./pages/Landing";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import CitizenDashboard from "./pages/CitizenDashboard";
+import CitizenBookPickup from "./pages/CitizenBookPickup";
+import CitizenRewards from "./pages/CitizenRewards";
+import CitizenEcoScore from "./pages/CitizenEcoScore";
+import CitizenPickups from "./pages/CitizenPickups";
 import CollectorDashboard from "./pages/CollectorDashboard";
+import CollectorRequests from "./pages/CollectorRequests";
 import NGODashboard from "./pages/NGODashboard";
 import NotFound from "./pages/NotFound";
 
@@ -32,13 +37,14 @@ const AppContent = () => {
           
           {/* Citizen Routes */}
           <Route path="/citizen" element={<CitizenDashboard />} />
-          <Route path="/citizen/book-pickup" element={<div>Book Pickup Page (Coming Soon)</div>} />
-          <Route path="/citizen/rewards" element={<div>Rewards Page (Coming Soon)</div>} />
-          <Route path="/citizen/eco-score" element={<div>Eco Score Page (Coming Soon)</div>} />
+          <Route path="/citizen/book-pickup" element={<CitizenBookPickup />} />
+          <Route path="/citizen/rewards" element={<CitizenRewards />} />
+          <Route path="/citizen/eco-score" element={<CitizenEcoScore />} />
+          <Route path="/citizen/pickups" element={<CitizenPickups />} />
           
           {/* Collector Routes */}
           <Route path="/collector" element={<CollectorDashboard />} />
-          <Route path="/collector/requests" element={<div>Pickup Requests (Coming Soon)</div>} />
+          <Route path="/collector/requests" element={<CollectorRequests />} />
           <Route path="/collector/active" element={<div>Active Route (Coming Soon)</div>} />
           <Route path="/collector/earnings" element={<div>Earnings (Coming Soon)</div>} />
           

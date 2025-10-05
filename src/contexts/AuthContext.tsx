@@ -3,13 +3,14 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 export type UserRole = 'citizen' | 'collector' | 'ngo';
 
 export interface User {
-  id: string;
+  id: number;
   name: string;
   email: string;
   role: UserRole;
-  avatar?: string;
   greenCoins?: number;
   ecoScore?: number;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 interface AuthContextType {
@@ -34,39 +35,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Mock users for development
-  const mockUsers = [
-    {
-      id: '1',
-      name: 'John Doe',
-      email: 'citizen@trash2trade.com',
-      role: 'citizen' as UserRole,
-      greenCoins: 150,
-      ecoScore: 78,
-    },
-    {
-      id: '2',
-      name: 'Maria Garcia',
-      email: 'collector@trash2trade.com',
-      role: 'collector' as UserRole,
-      greenCoins: 250,
-      ecoScore: 92,
-    },
-    {
-      id: '3',
-      name: 'Green Earth NGO',
-      email: 'ngo@trash2trade.com',
-      role: 'ngo' as UserRole,
-      greenCoins: 500,
-      ecoScore: 95,
-    },
-  ];
-
   useEffect(() => {
-    // Check for stored user
+    // Check for stored user and token
     const storedUser = localStorage.getItem('trash2trade_user');
-    if (storedUser) {
-      setUser(JSON.parse(storedUser));
+    const token = localStorage.getItem('trash2trade_token');
+    
+    if (storedUser && token) {
+      try {
+        const parsedUser = JSON.parse(storedUser);
+        setUser(parsedUser);
+      } catch (e) {
+        // If parsing fails, remove invalid data
+        localStorage.removeItem('trash2trade_user');
+        localStorage.removeItem('trash2trade_token');
+      }
     }
     setIsLoading(false);
   }, []);
@@ -74,42 +56,93 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const login = async (email: string, password: string, role: UserRole): Promise<boolean> => {
     setIsLoading(true);
     
-    // Mock authentication - find user by email and role
-    const foundUser = mockUsers.find(u => u.email === email && u.role === role);
-    
-    if (foundUser && password === 'password123') {
-      setUser(foundUser);
-      localStorage.setItem('trash2trade_user', JSON.stringify(foundUser));
+    try {
+      // Make API call to backend
+      const response = await fetch('http://localhost:5001/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password, role }),
+      });
+      
+      const data = await response.json();
+      
+      if (response.ok) {
+        // Transform user data to match frontend interface
+        const transformedUser: User = {
+          id: data.user.id,
+          name: data.user.name,
+          email: data.user.email,
+          role: data.user.role,
+          greenCoins: data.user.green_coins,
+          ecoScore: data.user.eco_score,
+          createdAt: data.user.created_at,
+          updatedAt: data.user.updated_at,
+        };
+        
+        setUser(transformedUser);
+        localStorage.setItem('trash2trade_user', JSON.stringify(transformedUser));
+        localStorage.setItem('trash2trade_token', data.token);
+        setIsLoading(false);
+        return true;
+      } else {
+        throw new Error(data.message || 'Login failed');
+      }
+    } catch (error) {
+      console.error('Login error:', error);
       setIsLoading(false);
-      return true;
+      return false;
     }
-    
-    setIsLoading(false);
-    return false;
   };
 
   const signup = async (name: string, email: string, password: string, role: UserRole): Promise<boolean> => {
     setIsLoading(true);
     
-    // Mock signup - create new user
-    const newUser: User = {
-      id: Date.now().toString(),
-      name,
-      email,
-      role,
-      greenCoins: 0,
-      ecoScore: 0,
-    };
-    
-    setUser(newUser);
-    localStorage.setItem('trash2trade_user', JSON.stringify(newUser));
-    setIsLoading(false);
-    return true;
+    try {
+      // Make API call to backend
+      const response = await fetch('http://localhost:5001/api/auth/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ name, email, password, role }),
+      });
+      
+      const data = await response.json();
+      
+      if (response.ok) {
+        // Transform user data to match frontend interface
+        const transformedUser: User = {
+          id: data.user.id,
+          name: data.user.name,
+          email: data.user.email,
+          role: data.user.role,
+          greenCoins: data.user.green_coins,
+          ecoScore: data.user.eco_score,
+          createdAt: data.user.created_at,
+          updatedAt: data.user.updated_at,
+        };
+        
+        setUser(transformedUser);
+        localStorage.setItem('trash2trade_user', JSON.stringify(transformedUser));
+        localStorage.setItem('trash2trade_token', data.token);
+        setIsLoading(false);
+        return true;
+      } else {
+        throw new Error(data.message || 'Signup failed');
+      }
+    } catch (error) {
+      console.error('Signup error:', error);
+      setIsLoading(false);
+      return false;
+    }
   };
 
   const logout = () => {
     setUser(null);
     localStorage.removeItem('trash2trade_user');
+    localStorage.removeItem('trash2trade_token');
   };
 
   return (
