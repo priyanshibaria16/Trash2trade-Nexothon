@@ -50,3 +50,41 @@ export const findUserById = async (id: number): Promise<UserWithoutPassword | nu
   const result = await pool.query(query, values);
   return result.rows.length ? result.rows[0] : null;
 };
+
+/**
+ * Update user's green coins
+ * @param id User's ID
+ * @param greenCoins New green coins value
+ * @returns Updated user object without password
+ */
+export const updateUserGreenCoins = async (id: number, greenCoins: number): Promise<UserWithoutPassword> => {
+  const query = `
+    UPDATE users 
+    SET green_coins = $1, updated_at = CURRENT_TIMESTAMP
+    WHERE id = $2
+    RETURNING id, name, email, role, green_coins, eco_score, created_at, updated_at
+  `;
+  const values = [greenCoins, id];
+  
+  const result = await pool.query(query, values);
+  return result.rows[0];
+};
+
+/**
+ * Update user's eco score
+ * @param id User's ID
+ * @param ecoScore New eco score value
+ * @returns Updated user object without password
+ */
+export const updateUserEcoScore = async (id: number, ecoScore: number): Promise<UserWithoutPassword> => {
+  const query = `
+    UPDATE users 
+    SET eco_score = $1, updated_at = CURRENT_TIMESTAMP
+    WHERE id = $2
+    RETURNING id, name, email, role, green_coins, eco_score, created_at, updated_at
+  `;
+  const values = [ecoScore, id];
+  
+  const result = await pool.query(query, values);
+  return result.rows[0];
+};
