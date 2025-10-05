@@ -88,3 +88,17 @@ export const updateUserEcoScore = async (id: number, ecoScore: number): Promise<
   const result = await pool.query(query, values);
   return result.rows[0];
 };
+
+/**
+ * Update user's password
+ * @param id User's ID
+ * @param newPassword New hashed password
+ * @returns Boolean indicating success
+ */
+export const updateUserPassword = async (id: number, newPassword: string): Promise<boolean> => {
+  const query = 'UPDATE users SET password = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2';
+  const values = [newPassword, id];
+  
+  const result = await pool.query(query, values);
+  return result.rowCount !== null && result.rowCount > 0;
+};

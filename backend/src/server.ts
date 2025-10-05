@@ -5,6 +5,7 @@ import authRoutes from './routes/auth.routes';
 import pickupRoutes from './routes/pickup.routes';
 import rewardRoutes from './routes/reward.routes';
 import paymentRoutes from './routes/payment.routes';
+import passwordRoutes from './routes/password.routes';
 import pool from './config/db';
 
 // Load environment variables
@@ -22,6 +23,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/pickups', pickupRoutes);
 app.use('/api/rewards', rewardRoutes);
 app.use('/api/payments', paymentRoutes);
+app.use('/api/password', passwordRoutes);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
@@ -52,6 +54,8 @@ const initDatabase = async () => {
         role VARCHAR(20) NOT NULL CHECK (role IN ('citizen', 'collector', 'ngo')),
         green_coins INTEGER DEFAULT 0,
         eco_score INTEGER DEFAULT 0,
+        reset_token VARCHAR(255),
+        reset_token_expires TIMESTAMP,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )

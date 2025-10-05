@@ -130,7 +130,7 @@ export const deletePickup = async (id: number): Promise<boolean> => {
   const values = [id];
 
   const result = await pool.query(query, values);
-  return result.rowCount > 0;
+  return result.rowCount !== null && result.rowCount > 0;
 };
 
 /**
