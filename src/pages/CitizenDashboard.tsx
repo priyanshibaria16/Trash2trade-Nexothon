@@ -57,6 +57,9 @@ const CitizenDashboard = () => {
     
     if (user) {
       fetchData();
+      // Refresh data every 30 seconds
+      const interval = setInterval(fetchData, 30000);
+      return () => clearInterval(interval);
     }
   }, [user]);
   

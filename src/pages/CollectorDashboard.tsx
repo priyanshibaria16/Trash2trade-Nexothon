@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -16,51 +16,74 @@ import {
   Route,
   Award
 } from 'lucide-react';
-import { mockPickups, mockCollectorStats } from '@/data/mockData';
+import { apiGet } from '@/utils/api.utils';
 
 const CollectorDashboard = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const [pickups, setPickups] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        // Fetch collector pickups
+        const pickupsResponse = await apiGet('/api/pickups/collector');
+        setPickups(pickupsResponse.pickups || []);
+      } catch (error) {
+        console.error('Error fetching data:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    if (user) {
+      fetchData();
+      // Refresh data every 30 seconds
+      const interval = setInterval(fetchData, 30000);
+      return () => clearInterval(interval);
+    }
+  }, [user]);
   
   if (!user || user.role !== 'collector') {
     return <div>Access denied</div>;
   }
 
   // Filter available pickup requests (not assigned to anyone or assigned to this collector)
-  const availablePickups = mockPickups.filter(pickup => 
-    pickup.status === 'pending' || (pickup.collectorId === user.id.toString() && pickup.status !== 'completed')
+  const availablePickups = pickups.filter(pickup => 
+    pickup.status === 'pending' || (pickup.collector_id === user.id && pickup.status !== 'completed')
   );
   
-  const myActivePickups = mockPickups.filter(pickup => 
-    pickup.collectorId === user.id.toString() && pickup.status === 'accepted'
+  const myActivePickups = pickups.filter(pickup => 
+    pickup.collector_id === user.id && pickup.status === 'accepted'
   );
 
   const stats = [
     {
       title: 'Today\'s Earnings',
-      value: '$85',
-      change: '+$12 vs yesterday',
+      value: '$0',
+      change: 'No data yet',
       icon: DollarSign,
       color: 'text-success',
     },
     {
       title: 'Active Pickups',
       value: myActivePickups.length,
-      change: '2 in progress',
+      change: 'Currently assigned',
       icon: Truck,
       color: 'text-primary',
     },
     {
       title: 'Rating',
-      value: mockCollectorStats.rating,
-      change: 'Based on 45 reviews',
+      value: '0.0',
+      change: 'No reviews yet',
       icon: Star,
       color: 'text-warning',
     },
     {
       title: 'Completion Rate',
-      value: `${mockCollectorStats.completionRate}%`,
-      change: 'This month',
+      value: '0%',
+      change: 'No data yet',
       icon: Award,
       color: 'text-purple-600',
     },
@@ -184,9 +207,9 @@ const CollectorDashboard = () => {
                     </div>
                     <div className="flex-1">
                       <div className="flex items-center space-x-2">
-                        <p className="font-medium capitalize">{pickup.wasteType}</p>
+                        <p className="font-medium capitalize">{pickup.waste_type}</p>
                         <Badge variant="secondary" className="text-xs">
-                          {pickup.quantity}kg
+                          {pickup.quantity} items
                         </Badge>
                         <Badge 
                           variant={pickup.status === 'pending' ? 'default' : 'secondary'}
@@ -199,12 +222,12 @@ const CollectorDashboard = () => {
                         <MapPin className="h-3 w-3 mr-1" />
                         {pickup.address.split(',')[0]}
                         <Clock className="h-3 w-3 ml-3 mr-1" />
-                        {new Date(pickup.preferredTime).toLocaleDateString()}
+                        {new Date(pickup.preferred_date).toLocaleDateString()}
                       </div>
                     </div>
                     <div className="text-right">
                       <p className="text-sm font-medium text-success">
-                        Est. ${pickup.quantity * 2}
+                        Est. ₹{pickup.quantity * 10}
                       </p>
                       <p className="text-xs text-muted-foreground">
                         +{pickup.quantity * 5} GC
@@ -241,25 +264,25 @@ const CollectorDashboard = () => {
               <div className="space-y-4">
                 <div className="flex justify-between items-center">
                   <span className="text-sm">Total Pickups</span>
-                  <span className="font-medium">{mockCollectorStats.totalPickups}</span>
+                  <span className="font-medium">0</span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-sm">Total Earnings</span>
                   <span className="font-medium text-success">
-                    ${mockCollectorStats.totalEarnings}
+                    $0
                   </span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-sm">GreenCoins Earned</span>
                   <span className="font-medium text-primary">
-                    {mockCollectorStats.greenCoinsEarned} GC
+                    0 GC
                   </span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-sm">Average Rating</span>
                   <div className="flex items-center space-x-1">
                     <Star className="h-4 w-4 text-warning fill-current" />
-                    <span className="font-medium">{mockCollectorStats.rating}</span>
+                    <span className="font-medium">0.0</span>
                   </div>
                 </div>
               </div>
@@ -281,7 +304,7 @@ const CollectorDashboard = () => {
                       onClick={() => navigate(`/collector/pickup/${pickup.id}`)}
                     >
                       <div className="flex items-center justify-between mb-2">
-                        <span className="font-medium capitalize">{pickup.wasteType}</span>
+                        <span className="font-medium capitalize">{pickup.waste_type}</span>
                         <Badge variant="default">In Progress</Badge>
                       </div>
                       <div className="text-sm text-muted-foreground">
@@ -291,7 +314,7 @@ const CollectorDashboard = () => {
                         </div>
                         <div className="flex items-center mt-1">
                           <Clock className="h-3 w-3 mr-1" />
-                          Scheduled: {new Date(pickup.scheduledDate || pickup.preferredTime).toLocaleString()}
+                          Scheduled: {new Date(pickup.preferred_date).toLocaleString()}
                         </div>
                       </div>
                       <Button size="sm" className="w-full mt-3" asChild>

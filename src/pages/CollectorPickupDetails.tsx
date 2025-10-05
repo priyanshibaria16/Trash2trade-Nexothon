@@ -15,7 +15,7 @@ import {
   User,
   ArrowLeft
 } from 'lucide-react';
-import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import { apiGet, apiPost } from '@/utils/api.utils';
@@ -324,22 +324,17 @@ const CollectorPickupDetails = () => {
             </CardHeader>
             <CardContent className="h-full p-0">
               {pickup.latitude && pickup.longitude ? (
-                <MapContainer 
-                  style={{ height: '100%' }}
-                >
-                  <TileLayer
-                    url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                    attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                  />
-                  <Marker position={[pickup.latitude, pickup.longitude]}>
-                    <Popup>
-                      <div className="text-sm">
-                        <div className="font-medium capitalize">{pickup.waste_type} Pickup</div>
-                        <div className="text-muted-foreground">{pickup.address}</div>
-                      </div>
-                    </Popup>
-                  </Marker>
-                </MapContainer>
+                <div style={{ height: '400px', border: '1px solid #ccc', borderRadius: '8px' }} className="flex items-center justify-center">
+                  <div className="text-center p-4">
+                    <MapPin className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                    <h3 className="text-lg font-medium mb-2">Pickup Location</h3>
+                    <p className="text-muted-foreground mb-4">{pickup.address}</p>
+                    <div className="text-sm text-muted-foreground space-y-1">
+                      <p>Latitude: {pickup.latitude.toFixed(6)}</p>
+                      <p>Longitude: {pickup.longitude.toFixed(6)}</p>
+                    </div>
+                  </div>
+                </div>
               ) : (
                 <div className="flex items-center justify-center h-full">
                   <div className="text-center">

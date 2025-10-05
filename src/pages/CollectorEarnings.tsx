@@ -82,6 +82,9 @@ const CollectorEarnings = () => {
 
     if (user) {
       fetchData();
+      // Refresh data every 30 seconds
+      const interval = setInterval(fetchData, 30000);
+      return () => clearInterval(interval);
     }
   }, [user]);
 
@@ -285,48 +288,6 @@ const CollectorEarnings = () => {
 
         {/* Right Column */}
         <div className="space-y-6">
-          {/* Withdraw Funds */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Withdraw Funds</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div className="p-4 bg-primary/5 rounded-lg">
-                  <p className="text-sm text-muted-foreground">Available Balance</p>
-                  <p className="text-2xl font-bold">₹{stats.totalEarnings.toFixed(2)}</p>
-                </div>
-                
-                <div className="space-y-2">
-                  <label htmlFor="withdrawalAmount" className="text-sm font-medium">
-                    Amount to Withdraw
-                  </label>
-                  <Input
-                    id="withdrawalAmount"
-                    type="number"
-                    value={withdrawalAmount}
-                    onChange={(e) => setWithdrawalAmount(e.target.value)}
-                    placeholder="Enter amount"
-                    min="0"
-                    step="0.01"
-                  />
-                </div>
-                
-                <Button 
-                  className="w-full"
-                  onClick={handleWithdraw}
-                  disabled={!withdrawalAmount || parseFloat(withdrawalAmount) <= 0 || parseFloat(withdrawalAmount) > stats.totalEarnings}
-                >
-                  Request Withdrawal
-                </Button>
-                
-                <p className="text-xs text-muted-foreground">
-                  Note: Withdrawals are processed within 3-5 business days
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-
           {/* Recent Earnings */}
           <Card>
             <CardHeader>

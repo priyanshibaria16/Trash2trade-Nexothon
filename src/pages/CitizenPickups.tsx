@@ -51,6 +51,9 @@ const CitizenPickups = () => {
 
     if (user) {
       fetchPickups();
+      // Refresh data every 30 seconds
+      const interval = setInterval(fetchPickups, 30000);
+      return () => clearInterval(interval);
     }
   }, [user]);
 
