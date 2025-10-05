@@ -14,7 +14,8 @@ import {
   Award,
   Globe,
   Plus,
-  Eye
+  Eye,
+  FileText
 } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { mockNGOImpact, mockImpactData } from '@/data/mockData';
@@ -75,7 +76,7 @@ const NGODashboard = () => {
     {
       title: 'Reports',
       description: 'Generate CSR reports',
-      icon: BarChart3,
+      icon: FileText,
       to: '/ngo/reports',
       color: 'bg-warning text-white',
     },

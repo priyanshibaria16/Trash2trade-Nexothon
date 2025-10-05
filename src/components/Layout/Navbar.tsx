@@ -15,7 +15,9 @@ import {
   MapPin,
   DollarSign,
   Heart,
-  BarChart3
+  BarChart3,
+  FileText,
+  Target
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -63,6 +65,8 @@ const Navbar = () => {
           { path: '/ngo', label: 'Dashboard', icon: Home },
           { path: '/ngo/sponsor', label: 'Sponsor Drive', icon: Heart },
           { path: '/ngo/impact', label: 'Impact Tracker', icon: BarChart3 },
+          { path: '/ngo/campaigns', label: 'Campaigns', icon: Target },
+          { path: '/ngo/reports', label: 'Reports', icon: FileText },
         ];
       default:
         return [];
