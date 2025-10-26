@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+const API_BASE = (import.meta as any).env?.VITE_API_BASE_URL || 'http://localhost:5005';
 
 export type UserRole = 'citizen' | 'collector' | 'ngo';
 
@@ -58,15 +59,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     
     try {
       // Make API call to backend
-      const response = await fetch('http://localhost:5004/api/auth/login', {
+      const response = await fetch(`${API_BASE}/api/auth/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ email, password, role }),
       });
-      
-      const data = await response.json();
+      let data: any = {};
+      try { data = await response.json(); } catch {}
       
       if (response.ok) {
         // Transform user data to match frontend interface
@@ -101,15 +102,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     
     try {
       // Make API call to backend
-      const response = await fetch('http://localhost:5004/api/auth/register', {
+      const response = await fetch(`${API_BASE}/api/auth/register`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ name, email, password, role }),
       });
-      
-      const data = await response.json();
+      let data: any = {};
+      try { data = await response.json(); } catch {}
       
       if (response.ok) {
         // Transform user data to match frontend interface

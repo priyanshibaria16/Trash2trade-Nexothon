@@ -13,10 +13,12 @@ This project has been enhanced with:
 - PostgreSQL database integration
 - Dynamic data fetching for all components
 - Leaflet maps integration (replacing Mapbox)
-- Forgot password functionality
+- Forgot/Reset password flow wired to backend routes
 - Payment section implementation
-- All pages now properly connected to the database
-- Fixed errors in collector pickup and active pickup sections
+- Footer UI improvements (bottom nav links, social icons, newsletter, dark mode toggle, "Made by NexaNinjas")
+- Frontend now uses `VITE_API_BASE_URL` to target the backend
+- Seed script to populate the database with Indian sample data
+- Fixes for collector white screen (route corrections, safer map coord handling)
 
 ## Project Structure
 
@@ -81,11 +83,17 @@ cd eco-connect-trade
 # Install frontend dependencies
 npm install
 
-# Start the development server
+# Start the development server (reload after changing .env)
 npm run dev
 ```
 
-The frontend will be available at http://localhost:8080
+Create a `.env` in the project root for API base:
+
+```
+VITE_API_BASE_URL=http://localhost:5005
+```
+
+The frontend will be available at the Vite dev URL (shown in terminal, e.g. http://localhost:5173).
 
 ### Backend Setup
 
@@ -106,7 +114,17 @@ npm run setup-db
 npm run dev
 ```
 
-The backend API will be available at http://localhost:5004
+The backend API will be available at http://localhost:5005
+
+### Seed Database (optional)
+
+Populate tables with Indian sample data (users, rewards, pickups, payments):
+
+```sh
+cd backend
+npm run seed
+```
+This inserts 50 records per table with realistic Indian names and INR amounts.
 
 ## API Endpoints
 
@@ -129,6 +147,10 @@ The backend API will be available at http://localhost:5004
 - `GET /api/rewards/my` - Get user's reward history
 
 ### Payments
+
+### Password
+- `POST /api/password/forgot` - Request password reset (email)
+- `POST /api/password/reset` - Reset password with token
 - `POST /api/payments` - Create payment
 - `GET /api/payments` - Get user's payment history
 - `GET /api/payments/:id` - Get specific payment

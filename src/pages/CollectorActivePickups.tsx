@@ -270,6 +270,8 @@ const CollectorActivePickups = () => {
               </CardHeader>
               <CardContent className="h-full p-0">
                 <MapContainer 
+                  center={[20.5937, 78.9629]} // India approx center
+                  zoom={5}
                   style={{ height: '100%' }}
                   className="rounded-lg"
                 >
@@ -278,11 +280,16 @@ const CollectorActivePickups = () => {
                     attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
                   />
                   {activePickups
-                    .filter(pickup => pickup.latitude && pickup.longitude)
+                    .map((pickup) => ({
+                      ...pickup,
+                      latNum: Number(pickup.latitude),
+                      lonNum: Number(pickup.longitude),
+                    }))
+                    .filter(p => Number.isFinite(p.latNum) && Number.isFinite(p.lonNum))
                     .map((pickup) => (
                       <Marker 
                         key={pickup.id} 
-                        position={[pickup.latitude!, pickup.longitude!]}
+                        position={[pickup.latNum, pickup.lonNum]}
                       >
                         <Popup>
                           <div className="text-sm">

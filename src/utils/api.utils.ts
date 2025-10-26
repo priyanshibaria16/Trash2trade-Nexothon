@@ -4,6 +4,8 @@
  * @param options Fetch options (method, headers, body, etc.)
  * @returns Response data
  */
+const API_BASE = (import.meta as any).env?.VITE_API_BASE_URL || 'http://localhost:5005';
+
 export const authenticatedFetch = async (endpoint: string, options: RequestInit = {}) => {
   // Get token from localStorage
   const token = localStorage.getItem('trash2trade_token');
@@ -16,13 +18,19 @@ export const authenticatedFetch = async (endpoint: string, options: RequestInit 
   };
   
   // Make the API call
-  const response = await fetch(`http://localhost:5004${endpoint}`, {
+  const response = await fetch(`${API_BASE}${endpoint}`, {
     ...options,
     headers,
   });
   
   // Parse response
-  const data = await response.json();
+  let data: any = null;
+  try {
+    data = await response.json();
+  } catch {
+    // Non-JSON or empty response
+    data = {};
+  }
   
   // Handle authentication errors
   if (response.status === 401) {

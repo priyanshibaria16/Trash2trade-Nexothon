@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Leaf } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { apiPost } from '@/utils/api.utils';
 
 const ForgotPassword = () => {
   const navigate = useNavigate();
@@ -18,8 +19,7 @@ const ForgotPassword = () => {
     setIsLoading(true);
     
     try {
-      // In a real app, this would make an API call to send a password reset email
-      // await apiPost('/api/auth/forgot-password', { email });
+      await apiPost('/api/password/forgot', { email });
       
       toast({
         title: 'Password Reset Email Sent',
