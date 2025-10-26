@@ -5,6 +5,8 @@
 2. Missing user information (name and email) in pickup data
 3. Incorrect middleware order in Express server causing 404 errors
 4. Missing TypeScript interface updates
+5. Collector pickup acceptance functionality not working properly
+6. Route optimization feature for collectors needed enhancement
 
 ## Fixes Implemented
 
@@ -53,6 +55,16 @@ Moved the 404 handler middleware to the end of the middleware stack in `backend/
 - Added routes in `src/App.tsx` for `/forgot-password` and `/reset-password`
 - Wired `ForgotPassword` page to `POST /api/password/forgot`
 
+### 9. Collector Pickup Acceptance Fix
+- Fixed backend logic in `backend/src/controllers/pickup.controller.ts` to properly update both collector assignment and status when accepting pickups
+- Improved frontend handling in `src/pages/CollectorRequests.tsx` to properly remove accepted pickups from the available list
+
+### 10. Route Optimization Feature Enhancement
+- Added checkbox selection system for multiple pickups in `src/pages/CollectorActivePickups.tsx`
+- Implemented greedy nearest-neighbor algorithm for route optimization
+- Added "Start Route in Google Maps" button to open optimized routes
+- Added "Select All" and "Clear" functionality for bulk operations
+
 ## Testing Results
 API tests confirm that:
 - Collector pickups endpoint returns pickup data with user information
@@ -60,6 +72,8 @@ API tests confirm that:
 - All status updates work correctly
 - User authentication and authorization function properly
 - Collector "View Details" loads without white screen; map gracefully handles missing/invalid coordinates
+- Collector pickup acceptance functionality works correctly
+- Route optimization feature functions as expected
 
 ## Pages Affected
 The following collector pages now work correctly with dynamic data:

@@ -19,6 +19,8 @@ This project has been enhanced with:
 - Frontend now uses `VITE_API_BASE_URL` to target the backend
 - Seed script to populate the database with Indian sample data
 - Fixes for collector white screen (route corrections, safer map coord handling)
+- Collector pickup acceptance functionality fix
+- Route optimization feature for collectors with Google Maps integration
 
 ## Project Structure
 
@@ -41,6 +43,8 @@ This project consists of two main components:
 - Manage active collection routes
 - Track earnings from recycling activities
 - View performance metrics
+- Optimize pickup routes with Google Maps integration
+- Select multiple pickups for efficient route planning
 
 ### For NGOs/Businesses
 - Sponsor recycling drives and campaigns
@@ -147,13 +151,13 @@ This inserts 50 records per table with realistic Indian names and INR amounts.
 - `GET /api/rewards/my` - Get user's reward history
 
 ### Payments
+- `POST /api/payments` - Create payment
+- `GET /api/payments` - Get user's payment history
+- `GET /api/payments/:id` - Get specific payment
 
 ### Password
 - `POST /api/password/forgot` - Request password reset (email)
 - `POST /api/password/reset` - Reset password with token
-- `POST /api/payments` - Create payment
-- `GET /api/payments` - Get user's payment history
-- `GET /api/payments/:id` - Get specific payment
 
 ## Database Schema
 

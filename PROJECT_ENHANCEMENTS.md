@@ -47,6 +47,8 @@ This document summarizes all the enhancements made to the EcoConnect project to 
 - Fixed middleware order in Express server to prevent 404 errors
 - Corrected TypeScript interface definitions
 - Fixed API endpoint mismatches
+- Fixed collector pickup acceptance functionality
+- Enhanced route optimization feature for collectors
 
 ## New Features
 - Forgot password functionality with email reset flow
@@ -56,6 +58,7 @@ This document summarizes all the enhancements made to the EcoConnect project to 
 - Reward redemption system
 - Performance metrics and statistics
 - Environmental impact tracking
+- Route optimization for collectors with Google Maps integration
 
 ## Testing
 - Created sample data for testing all features
@@ -63,6 +66,7 @@ This document summarizes all the enhancements made to the EcoConnect project to 
 - Confirmed proper data flow between frontend and backend
 - Tested authentication and authorization flows
 - Validated all user role functionalities
+- Tested collector pickup acceptance and route optimization features
 
 ## Deployment
 - Updated README with accurate setup instructions
@@ -71,6 +75,7 @@ This document summarizes all the enhancements made to the EcoConnect project to 
 - Added environment configuration guidelines
 
 ## Technology Stack
+
 ### Frontend
 - React with TypeScript
 - Vite build system
@@ -88,6 +93,7 @@ This document summarizes all the enhancements made to the EcoConnect project to 
 - TypeScript for type safety
 
 ## Pages Implemented
+
 ### Citizen Pages
 - CitizenDashboard.tsx
 - CitizenBookPickup.tsx
@@ -124,6 +130,7 @@ All endpoints are properly documented in the README and include:
 - Reward system endpoints
 - Payment processing endpoints
 - User profile endpoints
+- Password reset endpoints
 
 ## Security Features
 - JWT token-based authentication
@@ -140,9 +147,26 @@ All endpoints are properly documented in the README and include:
 - Optimized React components for rendering
 - Efficient data fetching strategies
 
+## Recent Enhancements
+
+### Collector Functionality Improvements
+- Fixed pickup acceptance functionality to properly update both collector assignment and status
+- Added route optimization feature with checkbox selection for multiple pickups
+- Implemented greedy nearest-neighbor algorithm for efficient route planning
+- Added Google Maps integration for optimized pickup routes
+- Enhanced UI with "Select All" and "Clear" functionality for bulk operations
+
+### User Experience Enhancements
+- Improved form handling and validation
+- Added better error handling and user feedback
+- Enhanced map functionality with better coordinate handling
+- Improved responsive design for all device sizes
+
 ## Future Enhancements
 - Add real-time notifications
 - Implement mobile app version
 - Add more detailed analytics and reporting
 - Expand reward system with partner integrations
 - Add social features for community engagement
+- Implement advanced route optimization algorithms
+- Add vehicle capacity tracking for collectors
