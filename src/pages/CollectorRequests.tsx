@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -33,6 +33,7 @@ interface Pickup {
 
 const CollectorRequests = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [pickups, setPickups] = useState<Pickup[]>([]);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState<number | null>(null);
@@ -68,6 +69,9 @@ const CollectorRequests = () => {
           pickup.id === pickupId ? { ...pickup, status: 'accepted' } : pickup
         )
       );
+
+      // Navigate to active pickups to view it there
+      navigate('/collector/active');
     } catch (error: any) {
       console.error('Error accepting pickup:', error);
     } finally {

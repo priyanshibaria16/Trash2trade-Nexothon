@@ -326,38 +326,38 @@ const CollectorPickupDetails = () => {
               {(() => {
                 const latNum = Number(pickup.latitude);
                 const lonNum = Number(pickup.longitude);
-                const hasCoords = Number.isFinite(latNum) && Number.isFinite(lonNum);
-                return hasCoords ? (
-                  <div style={{ height: '400px', border: '1px solid #ccc', borderRadius: '8px' }} className="flex items-center justify-center">
-                    <div className="text-center p-4">
-                      <MapPin className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                      <h3 className="text-lg font-medium mb-2">Pickup Location</h3>
-                      <p className="text-muted-foreground mb-4">{pickup.address}</p>
-                      <div className="text-sm text-muted-foreground space-y-1">
-                        <p>Latitude: {latNum.toFixed(6)}</p>
-                        <p>Longitude: {lonNum.toFixed(6)}</p>
+                const isFiniteCoords = Number.isFinite(latNum) && Number.isFinite(lonNum);
+                const isNearZero = Math.abs(latNum) < 0.0001 && Math.abs(lonNum) < 0.0001;
+                const hasCoords = isFiniteCoords && !isNearZero;
+                if (!hasCoords) {
+                  return (
+                    <div className="flex items-center justify-center h-full">
+                      <div className="text-center">
+                        <MapPin className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                        <p className="text-muted-foreground">Location not available</p>
                       </div>
                     </div>
-                  </div>
-                ) : (
-                  <div className="flex items-center justify-center h-full">
-                    <div className="text-center">
-                      <MapPin className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                      <p className="text-muted-foreground">Location not available</p>
-                    </div>
+                  );
+                }
+                return (
+                  <div style={{ height: '400px' }}>
+                    <MapContainer center={[latNum, lonNum]} zoom={14} style={{ height: '100%', width: '100%' }} className="rounded-lg">
+                      <TileLayer 
+                        url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png" 
+                        attribution='&copy; OpenStreetMap contributors &copy; CARTO' 
+                      />
+                      <Marker position={[latNum, lonNum]}>
+                        <Popup>
+                          <div className="text-sm">
+                            <div className="font-medium capitalize">{pickup.waste_type} Pickup</div>
+                            <div className="text-muted-foreground">{pickup.address}</div>
+                          </div>
+                        </Popup>
+                      </Marker>
+                    </MapContainer>
                   </div>
                 );
               })()}
-              {/* end coords block */}
-              {/* fallback */}
-              {!Number.isFinite(Number(pickup.latitude)) || !Number.isFinite(Number(pickup.longitude)) ? (
-                <div className="flex items-center justify-center h-full">
-                  <div className="text-center">
-                    <MapPin className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                    <p className="text-muted-foreground">Location not available</p>
-                  </div>
-                </div>
-              ) : null}
             </CardContent>
           </Card>
         </div>

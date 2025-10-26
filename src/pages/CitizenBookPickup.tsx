@@ -10,13 +10,18 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useToast } from '@/hooks/use-toast';
 import { apiPost } from '@/utils/api.utils';
 import { wasteTypes } from '@/data/mockData';
+import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet';
+import 'leaflet/dist/leaflet.css';
+import L from 'leaflet';
 
 const CitizenBookPickup = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
-  
+  const [latitude, setLatitude] = useState<number | null>(null);
+  const [longitude, setLongitude] = useState<number | null>(null);
+
   const [formData, setFormData] = useState({
     wasteType: 'plastic',
     quantity: 1,
@@ -42,7 +47,7 @@ const CitizenBookPickup = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    
+
     try {
       // Prepare data for API call with correct field names
       const pickupData = {
@@ -52,16 +57,18 @@ const CitizenBookPickup = () => {
         notes: formData.notes,
         preferred_date: formData.preferredDate,
         preferred_time: formData.preferredTime,
+        latitude: latitude,
+        longitude: longitude,
       };
-      
+
       // Make API call to book pickup
       const response = await apiPost('/api/pickups', pickupData);
-      
+
       toast({
         title: 'Pickup Requested!',
         description: 'Your pickup has been successfully requested. A collector will contact you soon.',
       });
-      
+
       // Navigate back to dashboard
       navigate('/citizen');
     } catch (error: any) {
@@ -91,6 +98,7 @@ const CitizenBookPickup = () => {
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-6">
+
               {/* Waste Type */}
               <div className="space-y-2">
                 <Label htmlFor="wasteType">Waste Type</Label>
@@ -139,6 +147,25 @@ const CitizenBookPickup = () => {
                   placeholder="Enter your full address"
                   required
                 />
+              </div>
+
+              <div className="space-y-2">
+                <Label>Select Location (optional)</Label>
+                <div className="rounded-lg overflow-hidden border" style={{ height: 320 }}>
+                  <MapContainer center={[20.5937, 78.9629]} zoom={5} style={{ height: '100%', width: '100%' }}>
+                    <TileLayer 
+                      url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png" 
+                      attribution='&copy; OpenStreetMap contributors &copy; CARTO'
+                    />
+                    <MapClickSetter onSet={(lat, lon) => { setLatitude(lat); setLongitude(lon); }} />
+                    {Number.isFinite(Number(latitude)) && Number.isFinite(Number(longitude)) && (
+                      <DraggableMarker lat={Number(latitude)} lon={Number(longitude)} onDrag={(lat, lon) => { setLatitude(lat); setLongitude(lon); }} />
+                    )}
+                  </MapContainer>
+                </div>
+                <div className="text-sm text-muted-foreground">
+                  {Number.isFinite(Number(latitude)) && Number.isFinite(Number(longitude)) ? `Lat: ${Number(latitude).toFixed(6)}, Lon: ${Number(longitude).toFixed(6)}` : 'Tap on the map to set a location'}
+                </div>
               </div>
 
               {/* Preferred Date */}
@@ -203,3 +230,39 @@ const CitizenBookPickup = () => {
 };
 
 export default CitizenBookPickup;
+
+// Leaflet marker icon fix
+delete (L.Icon.Default.prototype as any)._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
+  iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
+  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+});
+
+function MapClickSetter({ onSet }: { onSet: (lat: number, lon: number) => void }) {
+  useMapEvents({
+    click(e) {
+      onSet(e.latlng.lat, e.latlng.lng);
+    },
+  });
+  return null;
+}
+
+function DraggableMarker({ lat, lon, onDrag }: { lat: number; lon: number; onDrag: (lat: number, lon: number) => void }) {
+  const [position, setPosition] = useState<[number, number]>([lat, lon]);
+  useMapEvents({});
+  return (
+    <Marker
+      position={position}
+      draggable
+      eventHandlers={{
+        dragend: (e) => {
+          const m = e.target as any;
+          const p = m.getLatLng();
+          setPosition([p.lat, p.lng]);
+          onDrag(p.lat, p.lng);
+        },
+      }}
+    />
+  );
+}

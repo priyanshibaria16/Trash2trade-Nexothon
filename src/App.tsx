@@ -29,6 +29,8 @@ import NGOCampaigns from "./pages/NGOCampaigns";
 import NGOCampaignDetail from "./pages/NGOCampaignDetail";
 import Profile from "./pages/Profile";
 import NotFound from "./pages/NotFound";
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
 
 const queryClient = new QueryClient();
 

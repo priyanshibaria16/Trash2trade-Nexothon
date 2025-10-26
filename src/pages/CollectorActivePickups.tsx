@@ -14,7 +14,7 @@ import {
   Calendar,
   User
 } from 'lucide-react';
-import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import { apiGet, apiPost } from '@/utils/api.utils';
@@ -272,12 +272,13 @@ const CollectorActivePickups = () => {
                 <MapContainer 
                   center={[20.5937, 78.9629]} // India approx center
                   zoom={5}
+                  scrollWheelZoom
                   style={{ height: '100%' }}
                   className="rounded-lg"
                 >
                   <TileLayer
-                    url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                    attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                    url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
+                    attribution='&copy; OpenStreetMap contributors &copy; CARTO'
                   />
                   {activePickups
                     .map((pickup) => ({
@@ -285,7 +286,7 @@ const CollectorActivePickups = () => {
                       latNum: Number(pickup.latitude),
                       lonNum: Number(pickup.longitude),
                     }))
-                    .filter(p => Number.isFinite(p.latNum) && Number.isFinite(p.lonNum))
+                    .filter(p => Number.isFinite(p.latNum) && Number.isFinite(p.lonNum) && !(Math.abs(p.latNum) < 0.0001 && Math.abs(p.lonNum) < 0.0001))
                     .map((pickup) => (
                       <Marker 
                         key={pickup.id} 
@@ -320,6 +321,10 @@ const CollectorActivePickups = () => {
                         </Popup>
                       </Marker>
                     ))}
+                  <FitToMarkers points={activePickups
+                    .map((p) => ({ lat: Number(p.latitude), lon: Number(p.longitude) }))
+                    .filter(p => Number.isFinite(p.lat) && Number.isFinite(p.lon))
+                  } />
                 </MapContainer>
               </CardContent>
             </Card>
@@ -329,5 +334,18 @@ const CollectorActivePickups = () => {
     </div>
   );
 };
+
+function FitToMarkers({ points }: { points: { lat: number; lon: number }[] }) {
+  const map = useMap();
+  React.useEffect(() => {
+    if (points.length > 0) {
+      const bounds = L.latLngBounds(points.map(p => L.latLng(p.lat, p.lon)));
+      map.fitBounds(bounds.pad(0.2), { animate: true });
+    } else {
+      map.setView([20.5937, 78.9629], 5);
+    }
+  }, [points, map]);
+  return null;
+}
 
 export default CollectorActivePickups;
