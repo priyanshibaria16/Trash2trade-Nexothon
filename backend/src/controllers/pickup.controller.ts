@@ -230,7 +230,7 @@ export const updatePickupStatus = async (req: Request, res: Response): Promise<R
     if (userRole === 'collector') {
       // If pickup is not assigned to this collector, they can only accept it
       if (currentPickup.collector_id === null && status === 'accepted') {
-        // Assign collector to pickup
+        // Assign collector to pickup and update status
         const updatedPickup = await updatePickup(pickupId, {
           collector_id: userId,
           status
@@ -242,7 +242,10 @@ export const updatePickupStatus = async (req: Request, res: Response): Promise<R
         });
       }
       
-      if (currentPickup.collector_id !== userId) {
+      // If pickup is already assigned to this collector, they can update status
+      if (currentPickup.collector_id === userId) {
+        // Continue with normal update logic below
+      } else {
         return res.status(403).json({
           message: 'Access denied'
         });

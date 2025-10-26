@@ -61,13 +61,11 @@ const CollectorRequests = () => {
   const handleAcceptPickup = async (pickupId: number) => {
     setActionLoading(pickupId);
     try {
-      await apiPost(`/api/pickups/${pickupId}/status`, { status: 'accepted' });
+      const response = await apiPost(`/api/pickups/${pickupId}/status`, { status: 'accepted' });
       
-      // Update local state
+      // Update local state - remove the accepted pickup from the list
       setPickups(prevPickups => 
-        prevPickups.map(pickup => 
-          pickup.id === pickupId ? { ...pickup, status: 'accepted' } : pickup
-        )
+        prevPickups.filter(pickup => pickup.id !== pickupId)
       );
 
       // Navigate to active pickups to view it there
@@ -75,7 +73,7 @@ const CollectorRequests = () => {
     } catch (error: any) {
       console.error('Error accepting pickup:', error);
     } finally {
-      setActionLoading(pickupId);
+      setActionLoading(null);
     }
   };
 

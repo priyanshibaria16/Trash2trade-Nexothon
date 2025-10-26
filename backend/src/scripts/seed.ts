@@ -16,6 +16,34 @@ const indianCities = [
   'Mumbai','Delhi','Bengaluru','Hyderabad','Ahmedabad','Chennai','Kolkata','Pune','Jaipur','Surat',
   'Lucknow','Kanpur','Nagpur','Indore','Thane','Bhopal','Visakhapatnam','Vadodara','Noida','Gurugram'
 ];
+
+// Approx city coordinates (centroids)
+const cityCoords: Record<string, { lat: number; lon: number }> = {
+  Mumbai: { lat: 19.0760, lon: 72.8777 },
+  Delhi: { lat: 28.6139, lon: 77.2090 },
+  Bengaluru: { lat: 12.9716, lon: 77.5946 },
+  Hyderabad: { lat: 17.3850, lon: 78.4867 },
+  Ahmedabad: { lat: 23.0225, lon: 72.5714 },
+  Chennai: { lat: 13.0827, lon: 80.2707 },
+  Kolkata: { lat: 22.5726, lon: 88.3639 },
+  Pune: { lat: 18.5204, lon: 73.8567 },
+  Jaipur: { lat: 26.9124, lon: 75.7873 },
+  Surat: { lat: 21.1702, lon: 72.8311 },
+  Lucknow: { lat: 26.8467, lon: 80.9462 },
+  Kanpur: { lat: 26.4499, lon: 80.3319 },
+  Nagpur: { lat: 21.1458, lon: 79.0882 },
+  Indore: { lat: 22.7196, lon: 75.8577 },
+  Thane: { lat: 19.2183, lon: 72.9781 },
+  Bhopal: { lat: 23.2599, lon: 77.4126 },
+  Visakhapatnam: { lat: 17.6868, lon: 83.2185 },
+  Vadodara: { lat: 22.3072, lon: 73.1812 },
+  Noida: { lat: 28.5355, lon: 77.3910 },
+  Gurugram: { lat: 28.4595, lon: 77.0266 },
+};
+
+function jitter(n: number, spread = 0.02) { // ~2km-3km jitter
+  return n + (Math.random() - 0.5) * spread;
+}
 // Must match constraint in server.ts: ('plastic','e-waste','paper','metal')
 const wasteTypes = ['plastic','e-waste','paper','metal'];
 const paymentMethods = ['UPI','Card','NetBanking','Wallet'];
@@ -87,8 +115,9 @@ async function seedPickups(userIds: number[], count = 50) {
     const notes = Math.random() < 0.4 ? `Landmark: near ${['temple','school','market','metro station'][randInt(0,3)]}` : null;
     const date = new Date(Date.now() + randInt(1, 10) * 86400000);
     const time = `${randInt(9, 18)}:${randInt(0, 59).toString().padStart(2,'0')}`;
-    const lat = 20 + Math.random() * 9; // India approx lat
-    const lon = 69 + Math.random() * 13; // India approx lon
+    const base = cityCoords[city] || { lat: 22.0, lon: 79.0 };
+    const lat = jitter(base.lat);
+    const lon = jitter(base.lon);
 
     const res = await pool.query(
       `INSERT INTO pickups (user_id, waste_type, quantity, address, notes, preferred_date, preferred_time, latitude, longitude)
