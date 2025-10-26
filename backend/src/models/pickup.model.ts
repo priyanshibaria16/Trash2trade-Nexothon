@@ -1,6 +1,22 @@
 import pool from '../config/db';
 import { Pickup, PickupCreation, PickupUpdate } from './Pickup';
 
+// Normalize coordinates: if invalid or near (0,0), treat as null to avoid ocean pins
+const normalizeCoords = (row: any) => {
+  const lat = row?.latitude;
+  const lon = row?.longitude;
+  const latNum = Number(lat);
+  const lonNum = Number(lon);
+  const invalid =
+    lat === null || lon === null ||
+    !Number.isFinite(latNum) || !Number.isFinite(lonNum) ||
+    (Math.abs(latNum) < 0.0001 && Math.abs(lonNum) < 0.0001);
+  if (invalid) {
+    return { ...row, latitude: null, longitude: null };
+  }
+  return { ...row, latitude: latNum, longitude: lonNum };
+};
+
 /**
  * Create a new pickup request
  * @param pickupData Pickup creation data
@@ -41,7 +57,7 @@ export const createPickup = async (pickupData: PickupCreation): Promise<Pickup> 
   ];
 
   const result = await pool.query(query, values);
-  return result.rows[0];
+  return normalizeCoords(result.rows[0]);
 };
 
 /**
@@ -63,7 +79,7 @@ export const getPickupsByUserId = async (userId: number): Promise<any[]> => {
   const values = [userId];
 
   const result = await pool.query(query, values);
-  return result.rows;
+  return result.rows.map(normalizeCoords);
 };
 
 /**
@@ -85,7 +101,7 @@ export const getPickupsByCollectorId = async (collectorId: number): Promise<any[
   const values = [collectorId];
 
   const result = await pool.query(query, values);
-  return result.rows;
+  return result.rows.map(normalizeCoords);
 };
 
 /**
@@ -104,7 +120,7 @@ export const getPendingPickups = async (): Promise<any[]> => {
     ORDER BY p.created_at DESC
   `;
   const result = await pool.query(query);
-  return result.rows;
+  return result.rows.map(normalizeCoords);
 };
 
 /**
@@ -125,7 +141,7 @@ export const getPickupById = async (id: number): Promise<any | null> => {
   const values = [id];
 
   const result = await pool.query(query, values);
-  return result.rows.length ? result.rows[0] : null;
+  return result.rows.length ? normalizeCoords(result.rows[0]) : null;
 };
 
 /**
