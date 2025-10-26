@@ -64,7 +64,7 @@ const CollectorPickupDetails = () => {
         setPickup(response.pickup);
       } catch (error) {
         console.error('Error fetching pickup:', error);
-        navigate('/collector/active-pickups');
+        navigate('/collector/active');
       } finally {
         setLoading(false);
       }
@@ -151,7 +151,7 @@ const CollectorPickupDetails = () => {
     <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div className="mb-6">
         <Button variant="ghost" asChild>
-          <Link to="/collector/active-pickups">
+          <Link to="/collector/active">
             <ArrowLeft className="h-4 w-4 mr-2" />
             Back to Active Pickups
           </Link>
@@ -307,7 +307,7 @@ const CollectorPickupDetails = () => {
                   className="w-full"
                   asChild
                 >
-                  <Link to="/collector/active-pickups">
+                  <Link to="/collector/active">
                     Back to Active Pickups
                   </Link>
                 </Button>
